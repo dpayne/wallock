@@ -60,9 +60,6 @@ auto wall::LockSurface::on_configure(uint32_t /* serial */, uint32_t width, uint
     }
 
     set_is_configured(true);
-    if (get_renderer_mut() != nullptr) {
-        get_renderer_mut()->render(this);
-    }
 }
 
 auto wall::LockSurface::destroy_resources() -> void {

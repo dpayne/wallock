@@ -29,10 +29,15 @@ wall::MpvResource::MpvResource(const Config& config,
                                                     display->get_loop(),
                                                     &m_resource_config,
                                                     display->get_primary_state_mut(),
-                                                    [&](const std::string& file) { send_mpv_cmd("loadfile", file.c_str()); })} {
+                                                    surface->get_last_file(),
+                                                    surface->get_last_seek_position(),
+                                                    [&](const std::string& file, double) { send_mpv_cmd("loadfile", file.c_str()); })} {
     if (m_mpv == nullptr) {
         LOG_FATAL("Couldn't create mpv handle");
     }
+
+    surface->set_last_file({});
+    surface->set_last_seek_position(0.0);
 }
 
 wall::MpvResource::~MpvResource() {
@@ -92,6 +97,14 @@ auto wall::MpvResource::send_mpv_cmd_base(std::array<const char*, 4> args) const
 
 auto wall::MpvResource::get_current_file() const -> const std::filesystem::path& { return m_file_loader->get_current_file(); }
 
+auto wall::MpvResource::get_seek_position() const -> double {
+    double position = 0.0;
+    mpv_get_property(m_mpv, "time-pos", MPV_FORMAT_DOUBLE, &position);
+    return position;
+}
+
+auto wall::MpvResource::set_seek_position(double position) const -> void { send_mpv_cmd("seek", std::to_string(position).c_str(), "absolute"); }
+
 auto wall::MpvResource::terminate() -> void {
     m_event_handlers.clear();
     m_event_handler = nullptr;
@@ -128,6 +141,10 @@ auto wall::MpvResource::load_new_config(const wall::MpvResourceConfig& new_confi
 auto wall::MpvResource::next() -> void { m_file_loader->load_next_file(); }
 
 auto wall::MpvResource::setup() -> void {
+    // TODO: is this needed?
+    // force VO
+    mpv_set_option_string(m_mpv, "vo", "libmpv");
+
     if (mpv_initialize(m_mpv) < 0) {
         LOG_FATAL("mpv init failed");
     }
@@ -140,10 +157,6 @@ auto wall::MpvResource::setup() -> void {
     // setup mpv debug log
     send_mpv_cmd("set", "msg-level", "all=v");
 #endif
-
-    // TODO: is this needed?
-    // force VO
-    mpv_set_option_string(m_mpv, "vo", "libmpv");
 
     mpv_opengl_init_params init_params = {
         .get_proc_address = get_proc_address,
@@ -188,9 +201,7 @@ auto wall::MpvResource::setup_update_callback() -> void {
     m_mpv_update_async = m_display->get_loop()->add_poll_pipe([this](loop::PollPipe*, const std::vector<uint8_t>& /* buffer */) {
         mpv_render_context_update(get_mpv_context());
         if (m_surface != nullptr && m_surface->get_renderer_mut() != nullptr) {
-            LOG_DEBUG("Got mpv update callback");
             m_surface->get_renderer_mut()->set_is_dirty(true);
-            m_surface->get_renderer_mut()->set_has_buffer(true);  // the surface is only drawable once we have rendered a frame from mpv
             m_surface->get_renderer_mut()->render(get_surface());
         }
     });

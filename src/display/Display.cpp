@@ -38,7 +38,11 @@ wall::Display::Display(const Config& config,
     roundtrip();
 
     if (m_is_locked) {
-        lock();
+        create_lock();
+        for (const auto& screen : m_registry->get_screens()) {
+            screen->create_lock_surface(m_lock.get());
+        }
+        roundtrip();
     } else {
         start_pause_timer();
     }
@@ -57,6 +61,24 @@ wall::Display::~Display() {
 
 auto wall::Display::is_nvidia() const -> bool { return m_is_nvidia; }
 
+auto wall::Display::create_lock() -> void {
+    stop_pause_timer();
+    m_lock = m_registry->get_lock();
+    if (m_lock == nullptr) {
+        LOG_FATAL("Failed to get lock");
+    }
+
+    if (m_registry->get_input_inhibit_manager() != nullptr) {
+        m_input_inhibitor = zwlr_input_inhibit_manager_v1_get_inhibitor(m_registry->get_input_inhibit_manager());
+    } else if (m_is_enforce_input_inhibitor) {
+        LOG_FATAL("Enforce input inhibitor is enabled but failed to get input inhibit manager.");
+    }
+
+    // setup keyboard input handler
+    setup_keyboard_callback();
+    m_lock_time = std::chrono::system_clock::now();
+}
+
 auto wall::Display::detect_nvidia() -> bool {
     std::array<drmDevicePtr, 64> devices;
     auto device_count = 0;
@@ -73,6 +95,7 @@ auto wall::Display::detect_nvidia() -> bool {
             // Check if the vendor ID matches NVIDIA's (0x10DE)
             if (devices[device_ix]->deviceinfo.pci->vendor_id == 0x10DE) {
                 is_nvidia = true;
+                LOG_DEBUG("Detected NVIDIA GPU");
                 break;
             }
         }
@@ -123,10 +146,23 @@ auto wall::Display::loop() -> void {
 
         wl_display_dispatch_pending(m_wl_display);
 
+        if (m_is_swap_lock_to_wallpaper) {
+            swap_lock_to_wallpaper();
+            m_is_swap_lock_to_wallpaper = false;
+            roundtrip();
+        }
+
+        if (m_is_swap_wallpaper_to_lock) {
+            swap_wallpaper_to_lock();
+            m_is_swap_wallpaper_to_lock = false;
+            roundtrip();
+        }
+
         m_egl_surfaces_to_be_destroyed.clear();
 
         // With nvidia's egl-wayland implementation, we have to create and destroy the
         // EGL surface outside the dispatch loop since it will deadlock otherwise.
+
         for (auto& surface : m_surfaces_to_be_destroyed) {
             LOG_DEBUG("Destroying surface resources");
             surface->destroy_resources();
@@ -164,6 +200,16 @@ auto wall::Display::recreate_egl_surface(Surface* surface) -> void {
         add_egl_surface_to_be_destroyed(renderer->move_egl_surface());
         renderer->set_surface_egl(m_renderer_creator->create_egl_surface(surface->get_wl_surface(), surface->get_width(), surface->get_height()));
         renderer->set_is_recreate_egl_surface(false);
+        surface->set_mpv_resource(std::make_shared<MpvResource>(get_config(), this, surface));
+        surface->get_mpv_resource()->set_surface(surface);
+
+        try {
+            surface->get_mpv_resource()->setup();
+            surface->render();
+        } catch (const std::exception& e) {
+            LOG_ERROR("Failed to create mpv resource: {}", e.what());
+            surface->set_is_failed(true);
+        }
     }
 }
 
@@ -175,6 +221,7 @@ auto wall::Display::add_surface_to_be_destroyed(std::unique_ptr<Surface> surface
 
 auto wall::Display::add_egl_surface_to_be_destroyed(std::unique_ptr<SurfaceEGL> surface) -> void {
     if (surface != nullptr && m_is_nvidia) {
+        LOG_DEBUG("Adding egl surface to be destroyed");
         m_egl_surfaces_to_be_destroyed.push_back(std::move(surface));
     }
 }
@@ -286,7 +333,6 @@ auto wall::Display::update_primary(const std::string& name) -> void {
 }
 
 auto wall::Display::on_state_change(State state) -> void {
-    LOG_DEBUG("State change: {}", to_string(state));
     for (const auto& screen : m_registry->get_screens()) {
         screen->on_state_change(state);
     }
@@ -406,17 +452,24 @@ auto wall::Display::swap_wallpaper_to_lock() -> void {
     LOG_DEBUG("Swapping wallpaper to lock");
     const auto is_swap_compatible = MpvResourceConfig::is_resource_modes_compatible(get_config(), ResourceMode::Wallpaper, ResourceMode::Lock);
     for (const auto& screen : m_registry->get_screens()) {
-        if (is_swap_compatible && screen->get_wallpaper_surface_mut() != nullptr) {
-            if (is_swap_compatible) {
-                screen->swap_wallpaper_to_lock(m_lock.get());
-            } else {
-                if (screen->get_wallpaper_surface_mut()->get_renderer_mut() != nullptr) {
-                    screen->get_wallpaper_surface_mut()->get_renderer_mut()->stop();
-                }
-                screen->create_lock_surface(m_lock.get());
-            }
-        } else {
-            screen->create_lock_surface(m_lock.get());
+        std::filesystem::path current_file;
+        double seek_position = 0.0;
+
+        if (screen->get_wallpaper_surface_mut() != nullptr && screen->get_wallpaper_surface_mut()->get_mpv_resource() != nullptr) {
+            auto* resource = screen->get_wallpaper_surface_mut()->get_mpv_resource();
+
+            current_file = resource->get_current_file();
+            seek_position = resource->get_seek_position();
+
+            resource->terminate();
+        }
+
+        screen->destroy_wallpaper_surface();
+        screen->create_lock_surface(m_lock.get());
+
+        if (is_swap_compatible) {
+            screen->get_lock_surface_mut()->set_last_file(current_file);
+            screen->get_lock_surface_mut()->set_last_seek_position(seek_position);
         }
     }
 }
@@ -428,30 +481,8 @@ auto wall::Display::lock() -> void {
         return;
     }
 
-    m_lock = m_registry->get_lock();
-    if (m_lock == nullptr) {
-        LOG_FATAL("Failed to get lock");
-    }
-
-    swap_wallpaper_to_lock();
-
-    if (m_registry->get_input_inhibit_manager() != nullptr) {
-        m_input_inhibitor = zwlr_input_inhibit_manager_v1_get_inhibitor(m_registry->get_input_inhibit_manager());
-    } else {
-        if (m_is_enforce_input_inhibitor) {
-            LOG_FATAL("Enforce input inhibitor is enabled but failed to get input inhibit manager.");
-        }
-    }
-
-    // setup keyboard input handler
-    setup_keyboard_callback();
-
-    stop_pause_timer();
-    m_lock_time = std::chrono::system_clock::now();
-
-    for (const auto& screen : m_registry->get_screens()) {
-        screen->destroy_wallpaper_surface();
-    }
+    m_is_swap_wallpaper_to_lock = true;
+    create_lock();
 }
 
 auto wall::Display::swap_lock_to_wallpaper() -> void {
@@ -462,17 +493,28 @@ auto wall::Display::swap_lock_to_wallpaper() -> void {
 
     const auto is_swap_compatible = MpvResourceConfig::is_resource_modes_compatible(get_config(), ResourceMode::Wallpaper, ResourceMode::Lock);
     for (const auto& screen : m_registry->get_screens()) {
-        if (screen->get_lock_surface_mut() != nullptr) {
-            if (is_swap_compatible) {
-                screen->swap_lock_to_wallpaper();
-            } else {
-                if (screen->get_lock_surface_mut()->get_renderer_mut() != nullptr) {
-                    screen->get_lock_surface_mut()->get_renderer_mut()->stop();
-                }
-                screen->create_wallpaper_surface();
-            }
-        } else {
-            screen->create_wallpaper_surface();
+        std::filesystem::path current_file;
+        double seek_position = 0.0;
+
+        if (screen->get_lock_surface_mut() != nullptr && screen->get_lock_surface_mut()->get_mpv_resource() != nullptr) {
+            auto* resource = screen->get_lock_surface_mut()->get_mpv_resource();
+
+            current_file = resource->get_current_file();
+            seek_position = resource->get_seek_position();
+
+            LOG_ERROR("Current file: {}", current_file.string());
+            LOG_ERROR("Seek position: {}", seek_position);
+
+            resource->terminate();
+        }
+
+        screen->destroy_lock_surface();
+        roundtrip();
+        screen->create_wallpaper_surface();
+
+        if (is_swap_compatible) {
+            screen->get_wallpaper_surface_mut()->set_last_file(current_file);
+            screen->get_wallpaper_surface_mut()->set_last_seek_position(seek_position);
         }
     }
 }
@@ -485,7 +527,7 @@ auto wall::Display::unlock() -> void {
     keyboard->stop_repeat();
     m_keyboard_callback_id = 0;
 
-    swap_lock_to_wallpaper();
+    m_is_swap_lock_to_wallpaper = true;
 
     if (m_input_inhibitor != nullptr) {
         zwlr_input_inhibitor_v1_destroy(m_input_inhibitor);
@@ -508,10 +550,6 @@ auto wall::Display::unlock() -> void {
             auto front = m_primary_state.m_lock_files.front();
             m_primary_state.m_lock_files.pop_front();
             m_primary_state.m_lock_files.push_back(std::move(front));
-        }
-
-        for (const auto& screen : m_registry->get_screens()) {
-            screen->destroy_lock_surface();
         }
     } else {
         stop();

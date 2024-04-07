@@ -21,8 +21,16 @@ wall::MpvFileLoader::MpvFileLoader(const Config& config,
                                    Loop* loop,
                                    MpvResourceConfig* resource_config,
                                    PrimaryDisplayState* primary_state,
-                                   std::function<void(std::string)> on_load_file)
-    : m_config{config}, m_loop{loop}, m_resource_config{resource_config}, m_primary_state{primary_state}, m_on_load_file(std::move(on_load_file)) {}
+                                   std::filesystem::path current_file,
+                                   double last_seek_position,
+                                   std::function<void(std::string, double)> on_load_file)
+    : m_config{config},
+      m_last_file{std::move(current_file)},
+      m_last_seek_position{last_seek_position},
+      m_loop{loop},
+      m_resource_config{resource_config},
+      m_primary_state{primary_state},
+      m_on_load_file(std::move(on_load_file)) {}
 
 wall::MpvFileLoader::~MpvFileLoader() { stop(); }
 
@@ -130,6 +138,18 @@ auto wall::MpvFileLoader::setup_load_next_file_timer([[maybe_unused]] double fil
 }
 
 auto wall::MpvFileLoader::load_next_file() -> void {
+    if (!m_last_file.empty()) {
+        m_on_load_file(m_last_file, m_last_seek_position);
+        m_load_file_counter++;
+
+        m_current_file = m_last_file;
+
+        m_last_file = std::filesystem::path{};
+        m_last_seek_position = 0.0;
+
+        return;
+    }
+
     // Check if there are files to load
     if (m_files.empty()) {
         LOG_DEBUG("No files to load");
@@ -150,7 +170,7 @@ auto wall::MpvFileLoader::load_next_file() -> void {
     LOG_INFO("Loading file: {}", file.string());
 
     // Send the MPV command to load the file
-    m_on_load_file(file);
+    m_on_load_file(file, 0.0);
 
     m_load_file_counter++;
 

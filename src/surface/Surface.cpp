@@ -118,8 +118,17 @@ auto wall::Surface::on_state_change(State state) -> void {
 }
 
 auto wall::Surface::is_ready_to_draw() -> bool {
-    return is_configured() && !is_failed() && get_renderer_mut() != nullptr && get_renderer_mut()->has_buffer();
+    return is_configured() && !is_failed() && get_renderer_mut() != nullptr && get_renderer_mut()->has_buffer() &&
+           get_renderer_mut()->get_surface_egl_mut() != nullptr;
 }
+
+auto wall::Surface::get_last_file() const -> const std::filesystem::path& { return m_last_file; }
+
+auto wall::Surface::set_last_file(const std::filesystem::path& last_file) -> void { m_last_file = last_file; }
+
+auto wall::Surface::get_last_seek_position() const -> double { return m_last_seek_position; }
+
+auto wall::Surface::set_last_seek_position(double position) -> void { m_last_seek_position = position; }
 
 auto wall::Surface::get_subpixel() const -> wl_output_subpixel { return m_subpixel; }
 

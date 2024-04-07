@@ -92,6 +92,8 @@ class Display {
 
     auto check_for_failure() -> void;
 
+    auto create_lock() -> void;
+
     static auto detect_nvidia() -> bool;
 
    private:
@@ -152,5 +154,8 @@ class Display {
     bool m_is_shutting_done{false};
 
     bool m_is_nvidia{false};
+
+    bool m_is_swap_wallpaper_to_lock{};
+    bool m_is_swap_lock_to_wallpaper{};
 };
 }  // namespace wall

@@ -121,37 +121,29 @@ auto wall::RendererCreator::create_egl_renderer(Surface* surface) const -> void 
 auto wall::RendererCreator::create_mpv_renderer(Surface* surface) const -> void {
     LOG_DEBUG("Creating mpv renderer for surface {}", surface->get_output_name());
 
-    std::shared_ptr<RendererMpv> renderer = nullptr;
-    if (surface->get_mpv_resource() == nullptr) {
-        std::unique_ptr<SurfaceEGL> surface_egl = nullptr;
-        // make surface current before loading mpv resource
-        surface_egl = create_egl_surface(surface->get_wl_surface(), surface->get_width(), surface->get_height());
-        make_current(*surface_egl);
+    /* if (m_display->is_nvidia()) { */
+    /*     // nvidia egl surfaces will be setup later outside the main loop at the end of Display::loop */
+    /*     auto renderer = std::make_shared<RendererMpv>(get_config(), m_display, m_egl_display, m_egl_context, nullptr); */
+    /*     renderer->set_is_recreate_egl_surface(true); */
+    /*     surface->set_renderer(std::move(renderer)); */
+    /* } else { */
+    // make surface current before loading mpv resource
+    auto surface_egl = create_egl_surface(surface->get_wl_surface(), surface->get_width(), surface->get_height());
+    make_current(*surface_egl);
 
-        LOG_DEBUG("Creating mpv resource for surface {}", surface->get_output_name());
-        surface->set_mpv_resource(std::make_shared<MpvResource>(get_config(), m_display, surface));
+    LOG_DEBUG("Creating mpv resource for surface {}", surface->get_output_name());
+    surface->set_mpv_resource(std::make_shared<MpvResource>(get_config(), m_display, surface));
 
-        try {
-            surface->get_mpv_resource()->setup();
-        } catch (const std::exception& e) {
-            LOG_ERROR("Failed to create mpv resource: {}", e.what());
-            surface->set_is_failed(true);
-            return;
-        }
-        renderer =
-            std::make_shared<RendererMpv>(get_config(), m_display, m_egl_display, m_egl_context, std::move(surface_egl), surface->get_mpv_resource());
-    } else {
-        if (m_display->is_nvidia()) {
-            // nvidia egl surfaces will be setup later outside the main loop at the end of Display::loop
-            renderer = std::make_shared<RendererMpv>(get_config(), m_display, m_egl_display, m_egl_context, nullptr, surface->get_mpv_resource());
-            renderer->set_is_recreate_egl_surface(true);
-        } else {
-            std::unique_ptr<SurfaceEGL> surface_egl = create_egl_surface(surface->get_wl_surface(), surface->get_width(), surface->get_height());
-            renderer = std::make_shared<RendererMpv>(get_config(), m_display, m_egl_display, m_egl_context, std::move(surface_egl),
-                                                     surface->get_mpv_resource());
-        }
+    try {
+        surface->get_mpv_resource()->setup();
+    } catch (const std::exception& e) {
+        LOG_ERROR("Failed to create mpv resource: {}", e.what());
+        surface->set_is_failed(true);
+        return;
     }
 
+    auto renderer = std::make_shared<RendererMpv>(get_config(), m_display, m_egl_display, m_egl_context, std::move(surface_egl));
     surface->set_renderer(std::move(renderer));
     surface->get_mpv_resource()->set_surface(surface);
+    /* } */
 }

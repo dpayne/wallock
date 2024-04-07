@@ -82,8 +82,6 @@ auto wall::Keyboard::set_wl_keyboard(wl_keyboard* keyboard) -> void {
 }
 
 auto wall::Keyboard::on_keymap(uint32_t format, int file, uint32_t size) -> void {
-    LOG_DEBUG("Keyboard keymap {} {}", file, size);
-
     if (format != WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1) {
         close(file);
         LOG_FATAL("Unsupported keymap format");
@@ -118,7 +116,6 @@ auto wall::Keyboard::on_key(uint32_t /* serial */, uint32_t /* time */, uint32_t
         return;
     }
 
-    LOG_DEBUG("Keyboard key {} {}", key, state);
     const auto key_state = static_cast<wl_keyboard_key_state>(state);
 
     // wayland keycodes are offset by 8
@@ -199,7 +196,6 @@ auto wall::Keyboard::on_modifiers(uint32_t /* serial */, uint32_t mods_depressed
 }
 
 auto wall::Keyboard::on_repeat_info(int32_t rate, int32_t delay) -> void {
-    LOG_DEBUG("Keyboard repeat info");
     if (rate <= 0) {
         m_repeat_period = std::chrono::milliseconds(-1);
     } else {
@@ -219,10 +215,7 @@ auto wall::Keyboard::stop_repeat() -> void {
     m_repeat_timer = nullptr;
 }
 
-auto wall::Keyboard::on_repeat() -> void {
-    LOG_DEBUG("Keyboard repeat timer event");
-    fire_on_key_callbacks(m_repeat_sym, m_repeat_utf8_key);
-}
+auto wall::Keyboard::on_repeat() -> void { fire_on_key_callbacks(m_repeat_sym, m_repeat_utf8_key); }
 
 auto wall::Keyboard::get_layout() const -> const std::string& { return m_current_layout; }
 

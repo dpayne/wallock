@@ -249,22 +249,14 @@ auto wall::Screen::on_state_change(State state) -> void {
     }
 }
 
-auto wall::Screen::swap_lock_to_wallpaper() -> void {
-    m_lock_surface->get_renderer_mut()->stop();
-    create_wallpaper_surface(m_lock_surface->copy_mpv_resource());
-}
-
-auto wall::Screen::swap_wallpaper_to_lock(Lock* lock) -> void {
-    m_wallpaper_surface->get_renderer_mut()->stop();
-    create_lock_surface(lock, m_wallpaper_surface->copy_mpv_resource());
-}
-
 auto wall::Screen::destroy_lock_surface() -> void {
-    m_display->add_surface_to_be_destroyed(std::move(m_lock_surface));
+    /* m_display->add_surface_to_be_destroyed(std::move(m_lock_surface)); */
+    m_lock_surface->destroy_resources();
     m_lock_surface = nullptr;
 }
 
 auto wall::Screen::destroy_wallpaper_surface() -> void {
-    m_display->add_surface_to_be_destroyed(std::move(m_wallpaper_surface));
+    /* m_display->add_surface_to_be_destroyed(std::move(m_wallpaper_surface)); */
+    m_wallpaper_surface->destroy_resources();
     m_wallpaper_surface = nullptr;
 }

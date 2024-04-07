@@ -200,7 +200,6 @@ auto wall::CairoSurface::draw(int32_t width, int32_t height, int32_t scale) -> v
     }
 
     if (!m_surface->is_ready_to_draw()) {
-        LOG_DEBUG("Surface not fully configured yet");
         return;
     }
 

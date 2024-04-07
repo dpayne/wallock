@@ -9,12 +9,7 @@ namespace wall {
 class SurfaceEGL;
 class RendererMpv : public Renderer {
    public:
-    RendererMpv(const Config& config,
-                Display* display,
-                EGLDisplay egl_display,
-                EGLContext egl_context,
-                std::unique_ptr<SurfaceEGL> surface_egl,
-                MpvResource* resource);
+    RendererMpv(const Config& config, Display* display, EGLDisplay egl_display, EGLContext egl_context, std::unique_ptr<SurfaceEGL> surface_egl);
 
     ~RendererMpv() override;
 
@@ -25,16 +20,6 @@ class RendererMpv : public Renderer {
 
     auto render(Surface* surface) -> void override;
 
-    auto pause() -> void override;
-
-    auto play() -> void override;
-
-    auto stop() -> void override;
-
-    auto next() -> void override;
-
-    auto reload_resource(wall::ResourceMode mode) -> void override;
-
    protected:
     auto should_render(Surface* surface) -> bool;
 
@@ -42,7 +27,5 @@ class RendererMpv : public Renderer {
     EGLDisplay m_egl_display{};
 
     EGLContext m_egl_context{};
-
-    MpvResource* m_resource;
 };
 }  // namespace wall

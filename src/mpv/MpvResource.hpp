@@ -46,6 +46,10 @@ class MpvResource : public std::enable_shared_from_this<MpvResource> {
 
     auto stop() -> void;
 
+    auto get_seek_position() const -> double;
+
+    auto set_seek_position(double position) const -> void;
+
     auto next() -> void;
 
     [[nodiscard]] auto get_resource_config() const -> const MpvResourceConfig&;
@@ -101,8 +105,6 @@ class MpvResource : public std::enable_shared_from_this<MpvResource> {
     std::unique_ptr<MpvEventHandler> m_event_handler;
 
     std::vector<std::unique_ptr<MpvEventHandlerData>> m_event_handlers{};
-
-    std::filesystem::path m_current_file;
 
     std::shared_ptr<MpvScreenshot> m_screenshot;
 

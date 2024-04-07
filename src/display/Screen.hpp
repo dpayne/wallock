@@ -78,10 +78,6 @@ class Screen {
 
     auto destroy_wallpaper_surface() -> void;
 
-    auto swap_lock_to_wallpaper() -> void;
-
-    auto swap_wallpaper_to_lock(Lock* lock) -> void;
-
     auto on_state_change(State state) -> void;
 
     [[nodiscard]] auto is_done() const -> bool;

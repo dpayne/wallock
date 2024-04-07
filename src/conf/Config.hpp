@@ -41,8 +41,9 @@ class Config {
     auto get_with_fallback(std::string_view key, std::string_view fallback, ValueType default_value) const {
         // if the key is not directly set from the config, but the fallback is, then use the fallback
         if (!is_set_from_config_file(std::string{key}) && is_set_from_config_file(std::string{fallback})) {
-            // we know the fallback is set from the config so no need to use a default
-            return get<ValueType>(fallback);
+            // we know the fallback is set from the config so no need to use a default,
+            // we only use a default value to fix a false gcc warning
+            return get<ValueType>(fallback, default_value);
         }
 
         // otherwise, use the value from the config or the default
