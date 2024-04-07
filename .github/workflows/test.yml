@@ -1,0 +1,54 @@
+name: test
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+    paths: ['**.c', '**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake', '.github/workflows/tidy.yml']
+  push:
+    branches: [main, master, develop]
+    paths: ['**.c', '**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake', '.github/workflows/tidy.yml']
+
+concurrency:
+  group: ${{ github.workflow }}-linux-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    container:
+      image: archlinux:latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: dpayne/wallock
+
+      - uses: actions/cache@v4
+        with:
+          path: "**/cpm_modules"
+          key: ${{ github.workflow }}-cpm-modules-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
+
+      - name: Install packages
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm base-devel git cmake ninja wayland wayland-protocols egl-wayland libxkbcommon mesa mpv cairo ttf-firacode-nerd otf-firamono-nerd libdrm
+
+      - name: configure
+        run: cmake -Bbuild -DENABLE_TEST_COVERAGE=1 -DCMAKE_BUILD_TYPE=Debug
+
+      - name: build
+        run: cmake --build build -j4
+
+      - name: test
+        run: ./build/test/wallock_test --gtest_color=yes
+
+      - name: collect code coverage
+        run: bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"

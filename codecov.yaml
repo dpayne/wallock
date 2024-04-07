@@ -1,0 +1,18 @@
+ignore:
+  - "test"
+  - "build"
+  - "cpm_modules"
+  - "main"
+
+comment:
+  require_changes: true
+
+coverage:
+
+  precision: 2
+
+  range:
+
+  - 0.0
+
+  - 0.0

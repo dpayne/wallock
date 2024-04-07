@@ -1,0 +1,12 @@
+---
+Language:        Cpp
+BasedOnStyle:  Chromium
+ColumnLimit: 150
+Standard:        Cpp11
+ContinuationIndentWidth: 4
+IndentWidth:     4
+TabWidth:        4
+UseTab:          Never
+IndentPPDirectives: BeforeHash
+AllowShortFunctionsOnASingleLine: All
+...

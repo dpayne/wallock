@@ -1,0 +1,56 @@
+name: tidy
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+    paths: ['**.c', '**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake', '.github/workflows/tidy.yml']
+  push:
+    branches: [main, master, develop]
+    paths: ['**.c', '**.cpp', '**.h', '**.hpp', '**.cxx', '**.hxx', '**.cc', '**.hh', '**CMakeLists.txt', '**.cmake', '.github/workflows/tidy.yml']
+
+concurrency:
+  group: ${{ github.workflow }}-linux-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4.1.1
+
+      - uses: actions/cache@v4
+        with:
+          path: "**/cpm_modules"
+          key: ${{ github.workflow }}-cpm-modules-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
+
+      - name: Install packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake git cmake ninja-build libwayland-dev libwayland-egl-backend-dev wayland-protocols libxkbcommon-dev libegl1-mesa-dev libcairo2-dev libmpv-dev clang clang-tidy clang-tools libpam0g-dev libudev-dev wget python3.10 libdrm-dev
+
+      - name: configure
+        run: |
+          cmake -Bbuild -DCMAKE_BUILD_TYPE=Debug -DENABLE_TEST=OFF
+
+      - name: build
+        run: cmake --build build -j4
+
+      - uses: cpp-linter/cpp-linter-action@v2
+        name: clang-tidy
+        id: clang-tidy-check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PIP_NO_CACHE_DIR: false
+        with:
+          style: ""
+          ignore: ".git|.github|build|cmake|benchmark|test|main|include"
+          files-changed-only: true
+          lines-changed-only: true
+          version: "17"
+          tidy-checks: "" # force it to use the .clang-tidy file
+          database: "build" # path to the compile_commands.json file
+
+      - name: tidy
+        if: steps.clang-tidy-check.outputs.checks-failed > 0
+        run: echo "Some files failed the linting checks!" && exit 1
