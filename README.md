@@ -220,6 +220,7 @@ For arch users, there are existing packages with aerial videos packages on AUR.
 * [aerial-2k-videos](https://aur.archlinux.org/packages/aerial-2k-videos)
 * [aerial-4k-videos](https://aur.archlinux.org/packages/aerial-4k-videos)
 
+# Troubleshooting
 
 If you have issues with crashes or the video/image popping up in a new window instead of in the background, then try disabling hardware rendering.
 
