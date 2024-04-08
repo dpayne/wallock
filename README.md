@@ -1,3 +1,4 @@
+
 # Wallock
 
 [![Actions Status](https://github.com/dpayne/wallock/workflows/test/badge.svg)](https://github.com/dpayne/wallock/actions)
@@ -9,7 +10,9 @@ wallock is a wallpaper and lock screen that enables macos like lock screens and 
 
 ## Demo
 
-[![Alt text](https://img.youtube.com/vi/an07XFvCkIc/0.jpg)](https://www.youtube.com/watch?v=an07XFvCkIc)
+[![Example 1](https://img.youtube.com/vi/an07XFvCkIc/0.jpg)](https://www.youtube.com/watch?v=an07XFvCkIc)
+
+![Example 2](https://github.com/dpayne/wallock/assets/1331138/7a9e26c3-a4b9-4497-8b94-164c70466d6d)
 
 ## Dependencies
 
