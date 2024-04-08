@@ -4,6 +4,7 @@
 #include <mpv/client.h>
 #include <mpv/render_gl.h>
 #include <wayland-client-core.h>
+#include "conf/ConfigMacros.hpp"
 #include "display/Display.hpp"
 #include "mpv/MpvEventHandler.hpp"
 #include "mpv/MpvFileLoader.hpp"
@@ -29,18 +30,10 @@ wall::MpvResource::MpvResource(const Config& config,
                                                     display->get_loop(),
                                                     &m_resource_config,
                                                     display->get_primary_state_mut(),
-                                                    surface->get_last_file(),
-                                                    surface->get_last_seek_position(),
-                                                    [&](const std::string& file, double seek_position) {
-                                                        m_seek_position = seek_position;
-                                                        send_mpv_cmd("loadfile", file.c_str());
-                                                    })} {
+                                                    [&](const std::string& file) { send_mpv_cmd("loadfile", file.c_str()); })} {
     if (m_mpv == nullptr) {
         LOG_FATAL("Couldn't create mpv handle");
     }
-
-    surface->set_last_file({});
-    surface->set_last_seek_position(0.0);
 }
 
 wall::MpvResource::~MpvResource() {
@@ -100,14 +93,6 @@ auto wall::MpvResource::send_mpv_cmd_base(std::array<const char*, 4> args) const
 
 auto wall::MpvResource::get_current_file() const -> const std::filesystem::path& { return m_file_loader->get_current_file(); }
 
-auto wall::MpvResource::get_seek_position() const -> double {
-    double position = 0.0;
-    mpv_get_property(m_mpv, "time-pos", MPV_FORMAT_DOUBLE, &position);
-    return position;
-}
-
-auto wall::MpvResource::set_seek_position(double position) const -> void { send_mpv_cmd("seek", std::to_string(position).c_str(), "absolute"); }
-
 auto wall::MpvResource::terminate() -> void {
     m_event_handlers.clear();
     m_event_handler = nullptr;
@@ -144,9 +129,11 @@ auto wall::MpvResource::load_new_config(const wall::MpvResourceConfig& new_confi
 auto wall::MpvResource::next() -> void { m_file_loader->load_next_file(); }
 
 auto wall::MpvResource::setup() -> void {
-    // TODO: is this needed?
     // force VO
-    mpv_set_option_string(m_mpv, "vo", "libmpv");
+    const auto is_force_software_rendering = wall_conf_get(get_config(), general, force_software_rendering);
+    if (is_force_software_rendering) {
+        mpv_set_option_string(m_mpv, "vo", "libmpv");
+    }
 
     if (mpv_initialize(m_mpv) < 0) {
         LOG_FATAL("mpv init failed");
@@ -156,9 +143,11 @@ auto wall::MpvResource::setup() -> void {
     // disable terminal output in release mode
     send_mpv_cmd("set", "terminal", "no");
 #else
-    send_mpv_cmd("set", "terminal", "yes");
-    // setup mpv debug log
-    send_mpv_cmd("set", "msg-level", "all=v");
+    if (get_config().is_debug()) {
+        send_mpv_cmd("set", "terminal", "yes");
+        // setup mpv debug log
+        send_mpv_cmd("set", "msg-level", "all=v");
+    }
 #endif
 
     mpv_opengl_init_params init_params = {
@@ -297,10 +286,6 @@ auto wall::MpvResource::handle_file_loaded() -> void {
     m_file_loader->setup_load_next_file_timer(file_duration);
 
     m_is_single_frame = file_duration == 0.0;
-    if (m_seek_position > 0.0) {
-        set_seek_position(m_seek_position);
-        m_seek_position = 0.0;
-    }
 
     // Only take a screenshot if this is the primary resource
     if (get_surface()->is_primary()) {

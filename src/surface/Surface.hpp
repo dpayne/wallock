@@ -78,6 +78,8 @@ class Surface {
 
     [[nodiscard]] auto get_mpv_resource() const -> MpvResource*;
 
+    [[nodiscard]] auto share_mpv_resource() -> std::shared_ptr<MpvResource>;
+
     auto set_mpv_resource(std::shared_ptr<MpvResource> resource) -> void;
 
     [[nodiscard]] auto copy_mpv_resource() -> std::shared_ptr<MpvResource>;
@@ -102,19 +104,7 @@ class Surface {
 
     virtual auto destroy_resources() -> void;
 
-    [[nodiscard]] auto get_last_file() const -> const std::filesystem::path&;
-
-    auto set_last_file(const std::filesystem::path& file) -> void;
-
-    [[nodiscard]] auto get_last_seek_position() const -> double;
-
-    auto set_last_seek_position(double position) -> void;
-
    protected:
-    std::filesystem::path m_last_file;
-
-    double m_last_seek_position{};
-
     [[nodiscard]] auto get_config() const -> const Config&;
 
     auto create_surface() -> void;

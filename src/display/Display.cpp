@@ -4,6 +4,7 @@
 #include <xf86drm.h>
 #include <xkbcommon/xkbcommon.h>
 #include <chrono>
+#include <tuple>
 #include "conf/ConfigMacros.hpp"
 #include "display/PrimaryDisplayState.hpp"
 #include "input/Keyboard.hpp"
@@ -446,22 +447,13 @@ auto wall::Display::setup_keyboard_callback() -> void {  // NOLINT (readability-
 
 auto wall::Display::swap_wallpaper_to_lock() -> void {
     LOG_DEBUG("Swapping wallpaper to lock");
-    std::map<uint32_t, std::pair<std::filesystem::path, double>> last_files_for_screens;
+    std::map<uint32_t, std::shared_ptr<MpvResource>> last_files_for_screens;
 
     const auto is_swap_compatible = MpvResourceConfig::is_resource_modes_compatible(get_config(), ResourceMode::Wallpaper, ResourceMode::Lock);
     for (const auto& screen : m_registry->get_screens()) {
-        std::filesystem::path current_file;
-        double seek_position = 0.0;
-
         if (screen->get_wallpaper_surface_mut() != nullptr && screen->get_wallpaper_surface_mut()->get_mpv_resource() != nullptr) {
-            auto* resource = screen->get_wallpaper_surface_mut()->get_mpv_resource();
-
-            current_file = resource->get_current_file();
-            seek_position = resource->get_seek_position();
-
-            last_files_for_screens[screen->get_output_state().m_global_name] = std::make_pair(current_file, seek_position);
-
-            resource->terminate();
+            screen->get_wallpaper_surface_mut()->get_mpv_resource()->pause();
+            last_files_for_screens[screen->get_output_state().m_global_name] = screen->get_wallpaper_surface_mut()->share_mpv_resource();
         }
 
         screen->destroy_wallpaper_surface();
@@ -470,12 +462,11 @@ auto wall::Display::swap_wallpaper_to_lock() -> void {
     roundtrip();
 
     for (const auto& screen : m_registry->get_screens()) {
-        screen->create_lock_surface(m_lock.get());
-
         if (is_swap_compatible && last_files_for_screens.contains(screen->get_output_state().m_global_name)) {
-            auto [file, seek_pos] = last_files_for_screens[screen->get_output_state().m_global_name];
-            screen->get_lock_surface_mut()->set_last_file(file);
-            screen->get_lock_surface_mut()->set_last_seek_position(seek_pos);
+            auto resource = std::move(last_files_for_screens[screen->get_output_state().m_global_name]);
+            screen->create_lock_surface(m_lock.get(), resource);
+        } else {
+            screen->create_lock_surface(m_lock.get());
         }
     }
 }
@@ -497,22 +488,13 @@ auto wall::Display::swap_lock_to_wallpaper() -> void {
         return;
     }
 
-    std::map<uint32_t, std::pair<std::filesystem::path, double>> last_files_for_screens;
+    std::map<uint32_t, std::shared_ptr<MpvResource>> last_files_for_screens;
 
     const auto is_swap_compatible = MpvResourceConfig::is_resource_modes_compatible(get_config(), ResourceMode::Wallpaper, ResourceMode::Lock);
     for (const auto& screen : m_registry->get_screens()) {
-        std::filesystem::path current_file;
-        double seek_position = 0.0;
-
         if (screen->get_lock_surface_mut() != nullptr && screen->get_lock_surface_mut()->get_mpv_resource() != nullptr) {
-            auto* resource = screen->get_lock_surface_mut()->get_mpv_resource();
-
-            current_file = resource->get_current_file();
-            seek_position = resource->get_seek_position();
-
-            last_files_for_screens[screen->get_output_state().m_global_name] = std::make_pair(current_file, seek_position);
-
-            resource->terminate();
+            screen->get_lock_surface_mut()->get_mpv_resource()->pause();
+            last_files_for_screens[screen->get_output_state().m_global_name] = screen->get_lock_surface_mut()->share_mpv_resource();
         }
 
         screen->destroy_lock_surface();
@@ -521,12 +503,11 @@ auto wall::Display::swap_lock_to_wallpaper() -> void {
     roundtrip();
 
     for (const auto& screen : m_registry->get_screens()) {
-        screen->create_wallpaper_surface();
-
         if (is_swap_compatible && last_files_for_screens.contains(screen->get_output_state().m_global_name)) {
-            auto [file, seek_pos] = last_files_for_screens[screen->get_output_state().m_global_name];
-            screen->get_wallpaper_surface_mut()->set_last_file(file);
-            screen->get_wallpaper_surface_mut()->set_last_seek_position(seek_pos);
+            auto resource = std::move(last_files_for_screens[screen->get_output_state().m_global_name]);
+            screen->create_wallpaper_surface(resource);
+        } else {
+            screen->create_wallpaper_surface();
         }
     }
 }

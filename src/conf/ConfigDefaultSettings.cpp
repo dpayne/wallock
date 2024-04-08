@@ -51,6 +51,7 @@ void wall::conf::setup_settings() {
     wall_conf_set(grace, period_secs);
     wall_conf_set(input_inhibitor, enforce);
     wall_conf_set(general, daemonize);
+    wall_conf_set(general, force_software_rendering);
 
     wall_conf_set(file, path);
     wall_conf_set(file, extensions);

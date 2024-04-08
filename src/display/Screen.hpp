@@ -70,6 +70,10 @@ class Screen {
 
     auto create_wallpaper_surface() -> void;
 
+    auto create_lock_surface(Lock* lock, std::shared_ptr<MpvResource> mpv_resource) -> void;
+
+    auto create_wallpaper_surface(std::shared_ptr<MpvResource> mpv_resource) -> void;
+
     auto get_lock_surface_mut() -> LockSurface*;
 
     auto get_wallpaper_surface_mut() -> WallpaperSurface*;
@@ -85,10 +89,6 @@ class Screen {
     auto release_output() -> void;
 
    protected:
-    auto create_lock_surface(Lock* lock, std::shared_ptr<MpvResource> mpv_resource) -> void;
-
-    auto create_wallpaper_surface(std::shared_ptr<MpvResource> mpv_resource) -> void;
-
     auto on_geometry(int32_t x_pos,
                      int32_t y_pos,
                      int32_t physical_width,

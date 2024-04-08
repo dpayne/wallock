@@ -30,7 +30,7 @@ jobs:
       - name: Install packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake git cmake ninja-build libwayland-dev libwayland-egl-backend-dev wayland-protocols libxkbcommon-dev libegl1-mesa-dev libcairo2-dev libmpv-dev clang clang-tidy clang-tools libpam0g-dev libudev-dev wget cmake-format clang-format libuv1-dev
+          sudo apt-get install -y build-essential cmake git cmake ninja-build libwayland-dev libwayland-egl-backend-dev wayland-protocols libxkbcommon-dev libegl1-mesa-dev libcairo2-dev libmpv-dev clang clang-tidy clang-tools libpam0g-dev libudev-dev wget cmake-format clang-format libdrm-dev
 
       - name: configure
         run: |

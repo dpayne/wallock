@@ -125,18 +125,21 @@ auto wall::RendererCreator::create_mpv_renderer(Surface* surface) const -> void 
     auto surface_egl = create_egl_surface(surface->get_wl_surface(), surface->get_width(), surface->get_height());
     make_current(*surface_egl);
 
-    LOG_DEBUG("Creating mpv resource for surface {}", surface->get_output_name());
-    surface->set_mpv_resource(std::make_shared<MpvResource>(get_config(), m_display, surface));
+    if (surface->get_mpv_resource() == nullptr) {
+        LOG_DEBUG("Creating mpv resource for surface {}", surface->get_output_name());
+        surface->set_mpv_resource(std::make_shared<MpvResource>(get_config(), m_display, surface));
 
-    try {
-        surface->get_mpv_resource()->setup();
-    } catch (const std::exception& e) {
-        LOG_ERROR("Failed to create mpv resource: {}", e.what());
-        surface->set_is_failed(true);
-        return;
+        try {
+            surface->get_mpv_resource()->setup();
+        } catch (const std::exception& e) {
+            LOG_ERROR("Failed to create mpv resource: {}", e.what());
+            surface->set_is_failed(true);
+            return;
+        }
     }
 
     auto renderer = std::make_shared<RendererMpv>(get_config(), m_display, m_egl_display, m_egl_context, std::move(surface_egl));
     surface->set_renderer(std::move(renderer));
     surface->get_mpv_resource()->set_surface(surface);
+    surface->get_mpv_resource()->play();
 }

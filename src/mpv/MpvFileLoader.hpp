@@ -18,9 +18,7 @@ class MpvFileLoader {
                   Loop* loop,
                   MpvResourceConfig* resource_config,
                   PrimaryDisplayState* primary_state,
-                  std::filesystem::path current_file,
-                  double last_seek_position,
-                  std::function<void(std::string, double)> on_load_file);
+                  std::function<void(std::string)> on_load_file);
 
     virtual ~MpvFileLoader();
 
@@ -67,17 +65,13 @@ class MpvFileLoader {
    private:
     const Config& m_config;
 
-    std::filesystem::path m_last_file;
-
-    double m_last_seek_position{};
-
     Loop* m_loop{};
 
     MpvResourceConfig* m_resource_config{};
 
     PrimaryDisplayState* m_primary_state{};
 
-    std::function<void(std::string, double)> m_on_load_file{};
+    std::function<void(std::string)> m_on_load_file{};
 
     std::deque<std::filesystem::path> m_files;
 

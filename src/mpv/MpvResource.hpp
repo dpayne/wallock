@@ -46,10 +46,6 @@ class MpvResource : public std::enable_shared_from_this<MpvResource> {
 
     auto stop() -> void;
 
-    auto get_seek_position() const -> double;
-
-    auto set_seek_position(double position) const -> void;
-
     auto next() -> void;
 
     [[nodiscard]] auto get_resource_config() const -> const MpvResourceConfig&;
@@ -87,8 +83,6 @@ class MpvResource : public std::enable_shared_from_this<MpvResource> {
     const Config& m_config;
 
     bool m_is_single_frame{false};
-
-    double m_seek_position{};
 
     Display* m_display{};
 
