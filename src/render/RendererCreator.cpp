@@ -121,12 +121,6 @@ auto wall::RendererCreator::create_egl_renderer(Surface* surface) const -> void 
 auto wall::RendererCreator::create_mpv_renderer(Surface* surface) const -> void {
     LOG_DEBUG("Creating mpv renderer for surface {}", surface->get_output_name());
 
-    /* if (m_display->is_nvidia()) { */
-    /*     // nvidia egl surfaces will be setup later outside the main loop at the end of Display::loop */
-    /*     auto renderer = std::make_shared<RendererMpv>(get_config(), m_display, m_egl_display, m_egl_context, nullptr); */
-    /*     renderer->set_is_recreate_egl_surface(true); */
-    /*     surface->set_renderer(std::move(renderer)); */
-    /* } else { */
     // make surface current before loading mpv resource
     auto surface_egl = create_egl_surface(surface->get_wl_surface(), surface->get_width(), surface->get_height());
     make_current(*surface_egl);
@@ -145,5 +139,4 @@ auto wall::RendererCreator::create_mpv_renderer(Surface* surface) const -> void 
     auto renderer = std::make_shared<RendererMpv>(get_config(), m_display, m_egl_display, m_egl_context, std::move(surface_egl));
     surface->set_renderer(std::move(renderer));
     surface->get_mpv_resource()->set_surface(surface);
-    /* } */
 }

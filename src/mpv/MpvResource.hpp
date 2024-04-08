@@ -88,6 +88,8 @@ class MpvResource : public std::enable_shared_from_this<MpvResource> {
 
     bool m_is_single_frame{false};
 
+    double m_seek_position{};
+
     Display* m_display{};
 
     Surface* m_surface{};

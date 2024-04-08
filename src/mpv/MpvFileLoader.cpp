@@ -139,6 +139,7 @@ auto wall::MpvFileLoader::setup_load_next_file_timer([[maybe_unused]] double fil
 
 auto wall::MpvFileLoader::load_next_file() -> void {
     if (!m_last_file.empty()) {
+        LOG_INFO("Loading last file: {}", m_last_file.string());
         m_on_load_file(m_last_file, m_last_seek_position);
         m_load_file_counter++;
 

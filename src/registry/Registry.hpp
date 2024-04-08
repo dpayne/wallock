@@ -34,6 +34,8 @@ class Registry {
 
     [[nodiscard]] auto get_screens() const -> const std::vector<std::unique_ptr<wall::Screen>>&;
 
+    [[nodiscard]] auto get_screens_mut() -> std::vector<std::unique_ptr<wall::Screen>>*;
+
     [[nodiscard]] auto get_compositor() const -> Compositor* { return m_compositor.get(); }
 
     [[nodiscard]] auto get_subcompositor() const -> Subcompositor* { return m_subcompositor.get(); }

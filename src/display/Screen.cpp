@@ -79,12 +79,10 @@ wall::Screen::~Screen() {
     }
 
     if (m_lock_surface != nullptr) {
-        m_display->add_surface_to_be_destroyed(std::move(m_lock_surface));
         m_lock_surface = nullptr;
     }
 
     if (m_wallpaper_surface != nullptr) {
-        m_display->add_surface_to_be_destroyed(std::move(m_wallpaper_surface));
         m_wallpaper_surface = nullptr;
     }
 }
@@ -153,17 +151,8 @@ auto wall::Screen::on_done() -> void {
         LOG_DEBUG("Screen::on_done: Already done");
         return;
     }
+    LOG_DEBUG("Screen::on_done: {}", m_output_state.m_name);
 
-    LOG_DEBUG("Screen::on_done");
-    if (m_display->is_locked()) {
-        if (m_display->get_lock_mut() != nullptr) {
-            create_lock_surface(m_display->get_lock_mut());
-        } else {
-            LOG_ERROR("Screen::on_done: Lock is nullptr");
-        }
-    } else {
-        create_wallpaper_surface();
-    }
     m_is_done = true;
 }
 
@@ -250,13 +239,11 @@ auto wall::Screen::on_state_change(State state) -> void {
 }
 
 auto wall::Screen::destroy_lock_surface() -> void {
-    /* m_display->add_surface_to_be_destroyed(std::move(m_lock_surface)); */
     m_lock_surface->destroy_resources();
     m_lock_surface = nullptr;
 }
 
 auto wall::Screen::destroy_wallpaper_surface() -> void {
-    /* m_display->add_surface_to_be_destroyed(std::move(m_wallpaper_surface)); */
     m_wallpaper_surface->destroy_resources();
     m_wallpaper_surface = nullptr;
 }

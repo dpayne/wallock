@@ -4,7 +4,6 @@
 #include <wayland-client-protocol.h>
 #include <array>
 #include "display/Display.hpp"
-#include "mpv/MpvResourceConfig.hpp"
 #include "surface/Surface.hpp"
 #include "surface/SurfaceEGL.hpp"
 
@@ -19,27 +18,22 @@ wall::RendererMpv::~RendererMpv() { RendererMpv::stop(); };
 
 auto wall::RendererMpv::should_render(Surface* surface) -> bool {
     if (surface->get_mpv_resource() == nullptr) {
-        LOG_ERROR("Resource is null");
         return false;
     }
 
     if (!is_dirty()) {
-        LOG_DEBUG("Not dirty");
         return false;
     }
 
     if (!surface->is_configured()) {
-        LOG_DEBUG("Surface not configured");
         return false;
     }
 
     if (is_callback_scheduled()) {
-        LOG_DEBUG("Callback scheduled");
         return false;
     }
 
     if (get_surface_egl_mut() == nullptr) {
-        LOG_ERROR("Surface EGL is null");
         return false;
     }
 

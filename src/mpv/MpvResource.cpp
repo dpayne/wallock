@@ -31,7 +31,10 @@ wall::MpvResource::MpvResource(const Config& config,
                                                     display->get_primary_state_mut(),
                                                     surface->get_last_file(),
                                                     surface->get_last_seek_position(),
-                                                    [&](const std::string& file, double) { send_mpv_cmd("loadfile", file.c_str()); })} {
+                                                    [&](const std::string& file, double seek_position) {
+                                                        m_seek_position = seek_position;
+                                                        send_mpv_cmd("loadfile", file.c_str());
+                                                    })} {
     if (m_mpv == nullptr) {
         LOG_FATAL("Couldn't create mpv handle");
     }
@@ -294,6 +297,10 @@ auto wall::MpvResource::handle_file_loaded() -> void {
     m_file_loader->setup_load_next_file_timer(file_duration);
 
     m_is_single_frame = file_duration == 0.0;
+    if (m_seek_position > 0.0) {
+        set_seek_position(m_seek_position);
+        m_seek_position = 0.0;
+    }
 
     // Only take a screenshot if this is the primary resource
     if (get_surface()->is_primary()) {

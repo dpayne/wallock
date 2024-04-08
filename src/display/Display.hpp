@@ -29,10 +29,6 @@ class Display {
     auto operator=(const Display&) -> Display = delete;
     auto operator=(Display&&) -> Display = delete;
 
-    auto add_egl_surface_to_be_destroyed(std::unique_ptr<SurfaceEGL> surface) -> void;
-
-    auto add_surface_to_be_destroyed(std::unique_ptr<Surface> surface) -> void;
-
     auto reload() -> void;
 
     auto lock() -> void;
@@ -67,10 +63,12 @@ class Display {
 
     auto loop() -> void;
 
+    auto remove_screen(uint32_t global_name) -> void;
+
    protected:
     [[nodiscard]] auto get_config() const -> const Config&;
 
-    auto recreate_egl_surface(Surface* surface) -> void;
+    [[nodiscard]] auto create_pending_surfaces() -> bool;
 
     auto unlock() -> void;
 
@@ -83,6 +81,8 @@ class Display {
     auto stop_pause_timer() -> void;
 
     auto stop_screens() -> void;
+
+    auto stop_now() -> void;
 
     [[nodiscard]] auto is_configured() const -> bool;
 
@@ -101,7 +101,7 @@ class Display {
 
     Loop* m_loop{};
 
-    loop::Poll* m_display_poll;
+    loop::Poll* m_display_poll{};
 
     PrimaryDisplayState m_primary_state{};
 
@@ -145,17 +145,14 @@ class Display {
 
     struct zwlr_input_inhibitor_v1* m_input_inhibitor{};
 
-    std::vector<std::unique_ptr<SurfaceEGL>> m_egl_surfaces_to_be_destroyed;
-
-    std::vector<std::unique_ptr<Surface>> m_surfaces_to_be_destroyed;
-
     std::vector<std::unique_ptr<Screen>> m_screens_to_be_destroyed;
 
-    bool m_is_shutting_done{false};
+    bool m_is_shutting_down{false};
 
     bool m_is_nvidia{false};
 
     bool m_is_swap_wallpaper_to_lock{};
+
     bool m_is_swap_lock_to_wallpaper{};
 };
 }  // namespace wall

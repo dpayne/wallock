@@ -42,10 +42,13 @@ wall::Display::Display(const Config& config,
         for (const auto& screen : m_registry->get_screens()) {
             screen->create_lock_surface(m_lock.get());
         }
-        roundtrip();
     } else {
+        for (const auto& screen : m_registry->get_screens()) {
+            screen->create_wallpaper_surface();
+        }
         start_pause_timer();
     }
+    roundtrip();
 
     m_display_poll = m_loop->add_poll(wl_display_get_fd(m_wl_display), static_cast<int16_t>(POLLIN),
                                       [this](loop::Poll*, uint16_t) { m_is_dispatch_pending = true; });
@@ -113,14 +116,14 @@ auto wall::Display::check_for_failure() -> void {
     for (const auto& screen : m_registry->get_screens()) {
         if (screen->get_lock_surface_mut() != nullptr) {
             if (screen->get_lock_surface_mut()->is_failed()) {
-                stop();
+                stop_now();
                 return;
             }
         }
 
         if (screen->get_wallpaper_surface_mut() != nullptr) {
             if (screen->get_wallpaper_surface_mut()->is_failed()) {
-                stop();
+                stop_now();
                 return;
             }
         }
@@ -132,6 +135,7 @@ auto wall::Display::loop() -> void {
         while (wl_display_prepare_read(m_wl_display) != 0) {
             wl_display_dispatch_pending(m_wl_display);
         }
+
         wl_display_flush(m_wl_display);
         m_is_dispatch_pending = false;
         if (!m_loop->run()) {
@@ -146,39 +150,21 @@ auto wall::Display::loop() -> void {
 
         wl_display_dispatch_pending(m_wl_display);
 
-        if (m_is_swap_lock_to_wallpaper) {
-            swap_lock_to_wallpaper();
-            m_is_swap_lock_to_wallpaper = false;
-            roundtrip();
-        }
-
-        if (m_is_swap_wallpaper_to_lock) {
-            swap_wallpaper_to_lock();
-            m_is_swap_wallpaper_to_lock = false;
-            roundtrip();
-        }
-
-        m_egl_surfaces_to_be_destroyed.clear();
-
         // With nvidia's egl-wayland implementation, we have to create and destroy the
         // EGL surface outside the dispatch loop since it will deadlock otherwise.
-
-        for (auto& surface : m_surfaces_to_be_destroyed) {
-            LOG_DEBUG("Destroying surface resources");
-            surface->destroy_resources();
+        auto is_roundtrip = create_pending_surfaces();
+        if (!m_screens_to_be_destroyed.empty()) {
+            m_screens_to_be_destroyed.clear();
+            is_roundtrip = true;
         }
 
-        m_surfaces_to_be_destroyed.clear();
-        m_screens_to_be_destroyed.clear();
-
-        if (m_registry != nullptr) {
-            for (const auto& screen : m_registry->get_screens()) {
-                recreate_egl_surface(screen->get_lock_surface_mut());
-                recreate_egl_surface(screen->get_wallpaper_surface_mut());
-            }
+        if (is_roundtrip) {
+            roundtrip();
         }
 
-        if (m_is_shutting_done) {
+        if (m_is_shutting_down) {
+            stop_now();
+
             m_renderer_creator = nullptr;
             if (m_display_poll != nullptr) {
                 m_display_poll->close();
@@ -188,42 +174,38 @@ auto wall::Display::loop() -> void {
     }
 }
 
-auto wall::Display::recreate_egl_surface(Surface* surface) -> void {
-    if (surface == nullptr || surface->get_renderer_mut() == nullptr) {
-        return;
+auto wall::Display::create_pending_surfaces() -> bool {
+    auto is_created = false;
+    if (m_is_swap_lock_to_wallpaper) {
+        swap_lock_to_wallpaper();
+        m_is_swap_lock_to_wallpaper = false;
+        is_created = true;
     }
 
-    auto* renderer = surface->get_renderer_mut();
+    if (m_is_swap_wallpaper_to_lock) {
+        swap_wallpaper_to_lock();
+        m_is_swap_wallpaper_to_lock = false;
+        is_created = true;
+    }
 
-    if (renderer->is_recreate_egl_suface()) {
-        LOG_DEBUG("Recreating egl surface for surface {}", surface->get_output_name());
-        add_egl_surface_to_be_destroyed(renderer->move_egl_surface());
-        renderer->set_surface_egl(m_renderer_creator->create_egl_surface(surface->get_wl_surface(), surface->get_width(), surface->get_height()));
-        renderer->set_is_recreate_egl_surface(false);
-        surface->set_mpv_resource(std::make_shared<MpvResource>(get_config(), this, surface));
-        surface->get_mpv_resource()->set_surface(surface);
+    if (m_registry != nullptr) {
+        for (const auto& screen : m_registry->get_screens()) {
+            if (screen->is_done()) {
+                if (screen->get_lock_surface_mut() == nullptr && screen->get_wallpaper_surface_mut() == nullptr) {
+                    LOG_DEBUG("Creating surfaces for screen: {}", screen->get_output_state().m_name);
+                    if (is_locked()) {
+                        screen->create_lock_surface(m_lock.get());
+                    } else {
+                        screen->create_wallpaper_surface();
+                    }
 
-        try {
-            surface->get_mpv_resource()->setup();
-            surface->render();
-        } catch (const std::exception& e) {
-            LOG_ERROR("Failed to create mpv resource: {}", e.what());
-            surface->set_is_failed(true);
+                    is_created = true;
+                }
+            }
         }
     }
-}
 
-auto wall::Display::add_surface_to_be_destroyed(std::unique_ptr<Surface> surface) -> void {
-    if (surface != nullptr && m_is_nvidia) {
-        m_surfaces_to_be_destroyed.push_back(std::move(surface));
-    }
-}
-
-auto wall::Display::add_egl_surface_to_be_destroyed(std::unique_ptr<SurfaceEGL> surface) -> void {
-    if (surface != nullptr && m_is_nvidia) {
-        LOG_DEBUG("Adding egl surface to be destroyed");
-        m_egl_surfaces_to_be_destroyed.push_back(std::move(surface));
-    }
+    return is_created;
 }
 
 auto wall::Display::is_configured() const -> bool {
@@ -321,6 +303,20 @@ auto wall::Display::remove_primary(const std::string& name) -> void {
     }
 }
 
+auto wall::Display::remove_screen(uint32_t name) -> void {
+    if (m_registry != nullptr) {
+        auto* screens = m_registry->get_screens_mut();
+        for (auto it = screens->begin(); it != screens->end();) {
+            if (*it != nullptr && (*it)->get_output_state().m_global_name == name) {
+                m_screens_to_be_destroyed.emplace_back(std::move(*it));
+                it = screens->erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 auto wall::Display::update_primary(const std::string& name) -> void {
     if (!m_primary_name_from_config.empty()) {
         return;
@@ -371,7 +367,9 @@ auto wall::Display::reload() -> void {
 
 auto wall::Display::get_loop() const -> Loop* { return m_loop; }
 
-auto wall::Display::stop() -> void {
+auto wall::Display::stop() -> void { m_is_shutting_down = true; }
+
+auto wall::Display::stop_now() -> void {
     stop_pause_timer();
     m_on_key_processor.stop();
 
@@ -379,12 +377,8 @@ auto wall::Display::stop() -> void {
         stop_screens();
     }
 
-    m_screens_to_be_destroyed = m_registry->move_screens();
-
-    // note: render creator is destroyed later, after the screens have been destroyed
+    roundtrip(false);
     m_registry = nullptr;
-
-    m_is_shutting_done = true;
 
     if (m_on_stop != nullptr) {
         m_on_stop();
@@ -395,10 +389,12 @@ auto wall::Display::stop() -> void {
 auto wall::Display::stop_screens() -> void {
     for (const auto& screen : m_registry->get_screens()) {
         if (screen->get_lock_surface_mut() != nullptr && screen->get_lock_surface_mut()->get_renderer_mut() != nullptr) {
+            screen->get_lock_surface_mut()->get_mpv_resource()->terminate();
             screen->get_lock_surface_mut()->get_renderer_mut()->stop();
         }
 
         if (screen->get_wallpaper_surface_mut() != nullptr && screen->get_wallpaper_surface_mut()->get_renderer_mut() != nullptr) {
+            screen->get_wallpaper_surface_mut()->get_mpv_resource()->terminate();
             screen->get_wallpaper_surface_mut()->get_renderer_mut()->stop();
         }
     }
@@ -450,6 +446,8 @@ auto wall::Display::setup_keyboard_callback() -> void {  // NOLINT (readability-
 
 auto wall::Display::swap_wallpaper_to_lock() -> void {
     LOG_DEBUG("Swapping wallpaper to lock");
+    std::map<uint32_t, std::pair<std::filesystem::path, double>> last_files_for_screens;
+
     const auto is_swap_compatible = MpvResourceConfig::is_resource_modes_compatible(get_config(), ResourceMode::Wallpaper, ResourceMode::Lock);
     for (const auto& screen : m_registry->get_screens()) {
         std::filesystem::path current_file;
@@ -461,15 +459,23 @@ auto wall::Display::swap_wallpaper_to_lock() -> void {
             current_file = resource->get_current_file();
             seek_position = resource->get_seek_position();
 
+            last_files_for_screens[screen->get_output_state().m_global_name] = std::make_pair(current_file, seek_position);
+
             resource->terminate();
         }
 
         screen->destroy_wallpaper_surface();
+    }
+
+    roundtrip();
+
+    for (const auto& screen : m_registry->get_screens()) {
         screen->create_lock_surface(m_lock.get());
 
-        if (is_swap_compatible) {
-            screen->get_lock_surface_mut()->set_last_file(current_file);
-            screen->get_lock_surface_mut()->set_last_seek_position(seek_position);
+        if (is_swap_compatible && last_files_for_screens.contains(screen->get_output_state().m_global_name)) {
+            auto [file, seek_pos] = last_files_for_screens[screen->get_output_state().m_global_name];
+            screen->get_lock_surface_mut()->set_last_file(file);
+            screen->get_lock_surface_mut()->set_last_seek_position(seek_pos);
         }
     }
 }
@@ -491,6 +497,8 @@ auto wall::Display::swap_lock_to_wallpaper() -> void {
         return;
     }
 
+    std::map<uint32_t, std::pair<std::filesystem::path, double>> last_files_for_screens;
+
     const auto is_swap_compatible = MpvResourceConfig::is_resource_modes_compatible(get_config(), ResourceMode::Wallpaper, ResourceMode::Lock);
     for (const auto& screen : m_registry->get_screens()) {
         std::filesystem::path current_file;
@@ -502,19 +510,23 @@ auto wall::Display::swap_lock_to_wallpaper() -> void {
             current_file = resource->get_current_file();
             seek_position = resource->get_seek_position();
 
-            LOG_ERROR("Current file: {}", current_file.string());
-            LOG_ERROR("Seek position: {}", seek_position);
+            last_files_for_screens[screen->get_output_state().m_global_name] = std::make_pair(current_file, seek_position);
 
             resource->terminate();
         }
 
         screen->destroy_lock_surface();
-        roundtrip();
+    }
+
+    roundtrip();
+
+    for (const auto& screen : m_registry->get_screens()) {
         screen->create_wallpaper_surface();
 
-        if (is_swap_compatible) {
-            screen->get_wallpaper_surface_mut()->set_last_file(current_file);
-            screen->get_wallpaper_surface_mut()->set_last_seek_position(seek_position);
+        if (is_swap_compatible && last_files_for_screens.contains(screen->get_output_state().m_global_name)) {
+            auto [file, seek_pos] = last_files_for_screens[screen->get_output_state().m_global_name];
+            screen->get_wallpaper_surface_mut()->set_last_file(file);
+            screen->get_wallpaper_surface_mut()->set_last_seek_position(seek_pos);
         }
     }
 }

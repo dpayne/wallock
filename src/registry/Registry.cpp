@@ -95,14 +95,7 @@ auto wall::Registry::move_screens() -> std::vector<std::unique_ptr<wall::Screen>
 
 auto wall::Registry::on_global_remove(uint32_t name) -> void {
     LOG_DEBUG("Global removed: {}", name);
-    for (auto it = m_screens.begin(); it != m_screens.end();) {
-        if (*it != nullptr && (*it)->get_output_state().m_global_name == name) {
-            LOG_DEBUG("Removing screen with global name: {}", name);
-            it = m_screens.erase(it);
-        } else {
-            ++it;
-        }
-    }
+    m_display->remove_screen(name);
 }
 
 auto wall::Registry::get_lock() -> std::unique_ptr<Lock> {
@@ -113,6 +106,8 @@ auto wall::Registry::get_lock() -> std::unique_ptr<Lock> {
 
     return std::make_unique<Lock>(ext_session_lock_manager_v1_lock(m_lock_manager->get_lock_manager()));
 }
+
+auto wall::Registry::get_screens_mut() -> std::vector<std::unique_ptr<wall::Screen>>* { return &m_screens; }
 
 auto wall::Registry::get_screens() const -> const std::vector<std::unique_ptr<wall::Screen>>& { return m_screens; }
 
