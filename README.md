@@ -213,7 +213,7 @@ Note the screenshot here will be a screenshot of the video source, it will *not*
 
 By default, screenshots are taken 1 second into the video is cached in the `~/.cache/wallock` directory. If the screenshot exists in cache, then the cache version is used immediately instead of taking a screenshot.
 
-# Trouble Shooting
+# Troubleshooting
 
 If you have issues with crashes or the video/image popping up in a new window instead of in the background, then try disabling hardware rendering.
 
