@@ -45,6 +45,12 @@ See [Format.cmake](https://github.com/TheLartians/Format.cmake) for details.
 
 Sanitizers can be enabled by configuring CMake with `-DUSE_SANITIZER=<Address | Memory | MemoryWithOrigins | Undefined | Thread | Leak | 'Address;Undefined'>`.
 
+Address sanitizer causes some issues with hardware rendering so it is recommended to use software rendering when using address sanitizer. In the config file, you can set the following option to force software rendering.
+
+```
+general_force_software_rendering=true
+```
+
 #### Ccache
 
 Ccache can be enabled by configuring with `-DUSE_CCACHE=<ON | OFF>`.

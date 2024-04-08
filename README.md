@@ -7,18 +7,22 @@
 
 wallock is a wallpaper and lock screen that enables macos like lock screens and wallapers on wayland. It is designed to work with wlroots based wayland compositors (sway, hyprland, etc..).
 
+## Demo
+
+[![Alt text](https://img.youtube.com/vi/an07XFvCkIc/0.jpg)](https://www.youtube.com/watch?v=an07XFvCkIc)
+
 ## Dependencies
 
 ### Arch Linux
 
 ```
-sudo pacman -S base-devel git cmake wayland wayland-protocols egl-wayland libxkbcommon mesa mpv cairo ttf-firacode-nerd otf-firamono-nerd
+sudo pacman -S base-devel git cmake wayland wayland-protocols egl-wayland libxkbcommon mesa mpv cairo ttf-firacode-nerd otf-firamono-nerd libdrm
 ```
 
 ### Ubuntu
 
 ```
-sudo apt-get install build-essential git cmake libwayland-dev libwayland-egl-backend-dev wayland-protocols libxkbcommon-dev libegl1-mesa-dev libcairo2-dev libmpv-dev libpam0g-dev libudev-dev
+sudo apt-get install build-essential git cmake libwayland-dev libwayland-egl-backend-dev wayland-protocols libxkbcommon-dev libegl1-mesa-dev libcairo2-dev libmpv-dev libpam0g-dev libudev-dev libdrm-dev
 ```
 
 Installing the fira code font is optional, but the default config uses the font. To install the font on Ubuntu, run the following commands:
@@ -36,6 +40,8 @@ Use the following command to build and run the executable target.
 ```
 cmake -DCMAKE_BUILD_TYPE=Release -B build
 cmake --build build
+
+# Installation is needed to install the lock screen pam module. Otherwise the lock screen will never authenticate.
 sudo cmake --install build
 ```
 
@@ -50,6 +56,13 @@ While `walllock` is running, commands can be sent via `wallock -o <command>`. Th
 * `next` will load the next video in the list.
 * `reload` will reload the color scheme and some other configuration options but does not trigger a full reload. This is useful when using thing like pywal.
 * `full_reload` will reload the configuration file and triggers a full reload. This is useful when changing the file paths in the configuration file. This will do nothing when lock screen is active.
+
+## Lock screen without wallpaper
+
+To start the lock screen without the running the wallpaper run `wallock -s`, and disable the wallpaper in the configuration file.
+```
+wallpaper_enabled=false
+```
 
 # Signals
 
@@ -78,7 +91,7 @@ file_path=~/.wallpapers
 color_scheme_file=~/.config/wallock/color_scheme
 ```
 
-The default color scheme file is at `~/.config/wallock/color_scheme`. Each color in the color scheme is defined as a hex value with an optional alpha channel (RRGGBBAA).
+By the default, the it looks for a color scheme file at `~/.config/wallock/color_scheme`. Each color in the color scheme is defined as a hex value with an optional alpha channel (RRGGBBAA).
 
 ```
 color_background=#000000C0
@@ -101,6 +114,41 @@ lock_indicator_monitor=primary
 
 # keeps the videos in the same order across multiple monitors
 file_keep_same_order=true
+```
+
+#### More complex example
+
+```
+# Set two different paths for the lock screen and the wallpaper
+lock_path=~/.wallpapers/images
+wallpaper_path=~/.wallpapers/videos
+
+# Pause the video 10 seconds after unlocking the screen
+wallpaper_pause_after_unlock=true
+wallpaper_pause_after_unlock_delay_secs=10
+
+# set the lock indicator and bar to the primary monitor
+lock_bar_monitor=primary
+lock_indicator_monitor=primary
+monitor_primary=HDMI-A-1
+
+# Keeps the same order across multiple monitors
+file_keep_same_order=true
+
+# Enable screenshots of the video source and run wal to generate a color scheme
+file_screenshot_enabled=true
+file_screenshot_done_cmd=wal -i "{filename}"
+
+# Enables the analog clock lock indicator
+lock_indicator_analog_clock_enabled=true
+lock_indicator_analog_clock_second_hand_enabled=false
+lock_indicator_analog_clock_hour_marker_enabled=true
+lock_indicator_analog_clock_second_marker_enabled=false
+
+
+# Sets which modules are shown in the lock bar and in what order
+lock_bar_modules=keyboard, network, battery, clock
+
 ```
 
 # Using with pywal
@@ -160,7 +208,15 @@ This will take a screenshot of the video source each time a new video is loaded.
 
 Note the screenshot here will be a screenshot of the video source, it will *not* be a screenshot of the desktop.
 
-By default, screenshots are taken 1 seconds into the video and are cached in the `~/.cache/wallock` directory. If the screenshot exists in cache, then the cache version is used immediately instead of taking a screenshot.
+By default, screenshots are taken 1 second into the video is cached in the `~/.cache/wallock` directory. If the screenshot exists in cache, then the cache version is used immediately instead of taking a screenshot.
+
+# Trouble Shooting
+
+If you have issues with crashes or the video/image popping up in a new window instead of in the background, then try disabling hardware rendering.
+
+```
+general_force_software_rendering=true
+```
 
 # Contributing
 
