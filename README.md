@@ -1,3 +1,4 @@
+
 # Wallock
 
 [![Actions Status](https://github.com/dpayne/wallock/workflows/test/badge.svg)](https://github.com/dpayne/wallock/actions)
@@ -9,7 +10,9 @@ wallock is a wallpaper and lock screen that enables macos like lock screens and 
 
 ## Demo
 
-[![Alt text](https://img.youtube.com/vi/an07XFvCkIc/0.jpg)](https://www.youtube.com/watch?v=an07XFvCkIc)
+[![Example 1](https://img.youtube.com/vi/an07XFvCkIc/0.jpg)](https://www.youtube.com/watch?v=an07XFvCkIc)
+
+![Example 2](https://github.com/dpayne/wallock/assets/1331138/7a9e26c3-a4b9-4497-8b94-164c70466d6d)
 
 ## Dependencies
 
@@ -217,7 +220,6 @@ For arch users, there are existing packages with aerial videos packages on AUR.
 * [aerial-2k-videos](https://aur.archlinux.org/packages/aerial-2k-videos)
 * [aerial-4k-videos](https://aur.archlinux.org/packages/aerial-4k-videos)
 
-# Trouble Shooting
 
 If you have issues with crashes or the video/image popping up in a new window instead of in the background, then try disabling hardware rendering.
 
