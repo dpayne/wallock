@@ -210,6 +210,13 @@ Note the screenshot here will be a screenshot of the video source, it will *not*
 
 By default, screenshots are taken 1 second into the video is cached in the `~/.cache/wallock` directory. If the screenshot exists in cache, then the cache version is used immediately instead of taking a screenshot.
 
+## Example Video Sources
+
+For arch users, there are existing packages with aerial videos packages on AUR.
+
+* [aerial-2k-videos](https://aur.archlinux.org/packages/aerial-2k-videos)
+* [aerial-4k-videos](https://aur.archlinux.org/packages/aerial-4k-videos)
+
 # Trouble Shooting
 
 If you have issues with crashes or the video/image popping up in a new window instead of in the background, then try disabling hardware rendering.
@@ -221,13 +228,6 @@ general_force_software_rendering=true
 # Contributing
 
 When submitting a pull request, please run the formatter and test suite locally to ensure that the changes pass all checks. More info is at [Contributing.md](./Contributing.md).
-
-### Example Video Sources
-
-For arch users, there are existing packages with aerial videos packages on AUR.
-
-* [aerial-2k-videos](https://aur.archlinux.org/packages/aerial-2k-videos)
-* [aerial-4k-videos](https://aur.archlinux.org/packages/aerial-4k-videos)
 
 # Security Considerations
 

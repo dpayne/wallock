@@ -89,13 +89,6 @@ auto wall::WallpaperSurface::create() -> void {
     wl_surface_commit(get_wl_surface());
 }
 
-auto wall::WallpaperSurface::pause() -> void {
-    if (get_renderer_mut() == nullptr) {
-        return;
-    }
-    get_renderer_mut()->pause();
-}
-
 auto wall::WallpaperSurface::on_configure(uint32_t serial, uint32_t width, uint32_t height) -> void {
     LOG_DEBUG("Wallpaper surface configure {} {}", width, height);
     set_width(width);

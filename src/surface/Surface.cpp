@@ -74,8 +74,8 @@ auto wall::Surface::is_failed() const -> bool { return m_is_failed; }
 auto wall::Surface::set_is_failed(bool failed) -> void { m_is_failed = failed; }
 
 auto wall::Surface::next() -> void {
-    if (m_renderer != nullptr) {
-        m_renderer->next();
+    if (m_mpv_resource != nullptr) {
+        m_mpv_resource->next();
     }
 }
 

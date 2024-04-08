@@ -28,13 +28,7 @@ class Renderer : public std::enable_shared_from_this<Renderer> {
 
     virtual auto stop() -> void;
 
-    virtual auto pause() -> void;
-
     virtual auto reload_resource(wall::ResourceMode mode) -> void;
-
-    virtual auto play() -> void;
-
-    virtual auto next() -> void;
 
     [[nodiscard]] auto get_surface_egl() const -> const SurfaceEGL&;
 

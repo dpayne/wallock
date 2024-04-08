@@ -19,8 +19,6 @@ class WallpaperSurface : public Surface {
 
     auto create() -> void;
 
-    auto pause() -> void;
-
     [[nodiscard]] auto get_resource_mode() const -> ResourceMode override;
 
     auto draw_overlay() -> void override;

@@ -50,12 +50,6 @@ auto wall::Renderer::stop() -> void {
 
 auto wall::Renderer::reload_resource(wall::ResourceMode /* mode */) -> void {}
 
-auto wall::Renderer::pause() -> void {}
-
-auto wall::Renderer::play() -> void {}
-
-auto wall::Renderer::next() -> void {}
-
 auto wall::Renderer::get_config() const -> const Config& { return m_config; }
 
 auto wall::Renderer::set_surface_egl(std::unique_ptr<SurfaceEGL> egl_surface) -> void { m_egl_surface = std::move(egl_surface); }
