@@ -228,6 +228,10 @@ If you have issues with crashes or the video/image popping up in a new window in
 general_force_software_rendering=true
 ```
 
+### Nvidia
+
+Nvidia support should be considered pretty unstable. It seems to mostly work for me with the latest drivers and latest source build of nvidia-egl-wayland.
+
 # Contributing
 
 When submitting a pull request, please run the formatter and test suite locally to ensure that the changes pass all checks. More info is at [Contributing.md](./Contributing.md).
