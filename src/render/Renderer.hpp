@@ -44,7 +44,7 @@ class Renderer : public std::enable_shared_from_this<Renderer> {
 
     auto has_buffer() const -> bool;
 
-    auto is_recreate_egl_suface() const -> bool;
+    auto is_recreate_egl_surface() const -> bool;
 
     auto set_is_recreate_egl_surface(bool is_recreate_egl_surface) -> void;
 

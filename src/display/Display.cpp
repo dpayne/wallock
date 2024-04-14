@@ -4,9 +4,9 @@
 #include <xf86drm.h>
 #include <xkbcommon/xkbcommon.h>
 #include <chrono>
-#include <tuple>
 #include "conf/ConfigMacros.hpp"
 #include "display/PrimaryDisplayState.hpp"
+#include "display/Screen.hpp"
 #include "input/Keyboard.hpp"
 #include "mpv/MpvResourceConfig.hpp"
 #include "pam/PasswordManager.hpp"
@@ -53,6 +53,7 @@ wall::Display::Display(const Config& config,
 
     m_display_poll = m_loop->add_poll(wl_display_get_fd(m_wl_display), static_cast<int16_t>(POLLIN),
                                       [this](loop::Poll*, uint16_t) { m_is_dispatch_pending = true; });
+    m_display_wake = m_loop->add_poll_pipe([](loop::PollPipe*, const std::vector<uint8_t>&) { LOG_DEBUG("Display wake"); });
     check_for_failure();
 }
 
@@ -64,6 +65,12 @@ wall::Display::~Display() {
 }
 
 auto wall::Display::is_nvidia() const -> bool { return m_is_nvidia; }
+
+auto wall::Display::wake() -> void {
+    if (m_display_wake != nullptr) {
+        m_display_wake->write_one();
+    }
+}
 
 auto wall::Display::create_lock() -> void {
     stop_pause_timer();
@@ -167,6 +174,12 @@ auto wall::Display::loop() -> void {
             stop_now();
 
             m_renderer_creator = nullptr;
+
+            if (m_display_wake != nullptr) {
+                m_display_wake->close();
+                m_display_wake = nullptr;
+            }
+
             if (m_display_poll != nullptr) {
                 m_display_poll->close();
                 m_display_poll = nullptr;
@@ -192,6 +205,7 @@ auto wall::Display::create_pending_surfaces() -> bool {
     if (m_registry != nullptr) {
         for (const auto& screen : m_registry->get_screens()) {
             if (screen->is_done()) {
+                // this happens during startup
                 if (screen->get_lock_surface_mut() == nullptr && screen->get_wallpaper_surface_mut() == nullptr) {
                     LOG_DEBUG("Creating surfaces for screen: {}", screen->get_output_state().m_name);
                     if (is_locked()) {
@@ -201,12 +215,28 @@ auto wall::Display::create_pending_surfaces() -> bool {
                     }
 
                     is_created = true;
+                } else {
+                    recreate_failed_renderers(screen.get());
                 }
             }
         }
     }
 
     return is_created;
+}
+
+auto wall::Display::recreate_failed_renderers(Screen* screen) -> void {
+    if (screen->get_lock_surface_mut() != nullptr && screen->get_lock_surface_mut()->get_renderer_mut() != nullptr &&
+        screen->get_lock_surface_mut()->get_renderer_mut()->is_recreate_egl_surface()) {
+        LOG_DEBUG("Recreating lock surface for screen: {}", screen->get_output_state().m_name);
+        screen->destroy_lock_surface();
+        screen->create_lock_surface(m_lock.get());
+    } else if (screen->get_wallpaper_surface_mut() != nullptr && screen->get_wallpaper_surface_mut()->get_renderer_mut() != nullptr &&
+               screen->get_wallpaper_surface_mut()->get_renderer_mut()->is_recreate_egl_surface()) {
+        LOG_DEBUG("Recreating wallpaper surface for screen: {}", screen->get_output_state().m_name);
+        screen->destroy_wallpaper_surface();
+        screen->create_wallpaper_surface();
+    }
 }
 
 auto wall::Display::is_configured() const -> bool {

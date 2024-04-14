@@ -33,7 +33,9 @@ wall::RendererCreator::RendererCreator(const Config& config, Display* display)
         LOG_FATAL("Could not initialize EGL");
     }
 
-    eglBindAPI(EGL_OPENGL_API);
+    if (eglBindAPI(EGL_OPENGL_API) != EGL_TRUE) {
+        LOG_FATAL("Could not bind EGL API");
+    }
 
     EGLint num_configs{};
     std::array<EGLint, 13> attribs = {EGL_SURFACE_TYPE,
@@ -101,7 +103,9 @@ auto wall::RendererCreator::create_egl_surface(wl_surface* surface, uint32_t wid
     }
 
     LOG_DEBUG("Setting swap interval");
-    eglSwapInterval(m_egl_display, 0);
+    if (eglSwapInterval(m_egl_display, 0) != EGL_TRUE) {
+        LOG_FATAL("Couldn't set swap interval");
+    }
 
     return std::make_unique<SurfaceEGL>(m_egl_display, m_egl_context, egl_window, egl_surface);
 }

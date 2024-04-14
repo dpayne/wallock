@@ -65,10 +65,14 @@ class Display {
 
     auto remove_screen(uint32_t global_name) -> void;
 
+    auto wake() -> void;
+
    protected:
     [[nodiscard]] auto get_config() const -> const Config&;
 
     [[nodiscard]] auto create_pending_surfaces() -> bool;
+
+    auto recreate_failed_renderers(Screen* screen) -> void;
 
     auto unlock() -> void;
 
@@ -102,6 +106,8 @@ class Display {
     Loop* m_loop{};
 
     loop::Poll* m_display_poll{};
+
+    loop::PollPipe* m_display_wake{};
 
     PrimaryDisplayState m_primary_state{};
 
