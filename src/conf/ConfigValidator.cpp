@@ -1,9 +1,13 @@
 #include "conf/ConfigValidator.hpp"
 
+#include <filesystem>
 #include "conf/ConfigMacros.hpp"
+#include "util/CommandProcessor.hpp"
 #include "util/FileUtils.hpp"
 
-auto wall::ConfigValidator::validate(const Config& config) -> bool { return is_resource_paths_valid(config); }
+auto wall::ConfigValidator::validate(const Config& config) -> bool {
+    return is_resource_paths_valid(config) && is_pam_file_installed(config) && !is_already_running(config);
+}
 
 auto wall::ConfigValidator::is_resource_paths_valid(const Config& config) -> bool {
     const auto file_path_str = wall_conf_get(config, file, path);
@@ -52,4 +56,29 @@ auto wall::ConfigValidator::is_resource_path_valid(std::string_view path_str) ->
     }
 
     return true;
+}
+
+auto wall::ConfigValidator::is_pam_file_installed(const Config& config) -> bool {
+    const auto pam_file_path = std::filesystem::path{"/etc/pam.d/wallock"};
+    if (!std::filesystem::exists(pam_file_path)) {
+        LOG_ERROR("Pam file not found at path: {}", pam_file_path.string());
+        return false;
+    }
+
+    return true;
+}
+
+auto wall::ConfigValidator::is_already_running(const Config& config) -> bool {
+    const auto is_ignore_running = wall_conf_get(config, command, ignore_is_running);
+    if (is_ignore_running) {
+        return false;
+    }
+    const auto cmd = wall_conf_get(config, command, name);
+
+    if (cmd.empty() && CommandProcessor::is_running(config)) {
+        LOG_ERROR("Already running, if this is a mistake, please remove the file: {}", CommandProcessor::get_socket_filename(config).string());
+        return true;
+    }
+
+    return false;
 }

@@ -29,6 +29,8 @@ class CommandProcessor {
 
     static auto is_running(const Config& config) -> bool;
 
+    static auto get_socket_filename(const Config& config) -> std::filesystem::path;
+
    protected:
     [[nodiscard]] auto get_config() const -> const Config&;
 

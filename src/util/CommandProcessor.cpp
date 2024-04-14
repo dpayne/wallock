@@ -17,13 +17,17 @@ wall::CommandProcessor::~CommandProcessor() { stop_listening(); }
 
 auto wall::CommandProcessor::get_config() const -> const Config& { return m_config; }
 
+auto wall::CommandProcessor::get_socket_filename(const Config& config) -> std::filesystem::path {
+    return FileUtils::get_default_runtime_dir() / StringUtils::trim(wall_conf_get(config, command, socket_filename));
+}
+
 auto wall::CommandProcessor::start_listening() -> bool {
     if (m_pipe != nullptr) {
         LOG_ERROR("Already listening");
         return false;
     }
 
-    const auto socket_filename = FileUtils::get_default_runtime_dir() / m_socket_filename;
+    const auto socket_filename = get_socket_filename(get_config());
     if (!m_is_ignore_running && is_running(get_config())) {
         LOG_ERROR("Already running, if this is a mistake, please remove the file: {}", socket_filename.string());
         return false;

@@ -12,6 +12,13 @@
 #include "util/StringUtils.hpp"
 
 auto wall::Wallock::start(int argc, const char** argv) -> void {
+    // first validate the config
+    wall::Config test_config{argc, argv};
+    if (!ConfigValidator::validate(test_config)) {
+        exit(1);
+        return;
+    }
+
     // deamonize check needs to happen before we initialize the logger or do anything else
     daemonize(argc, argv);
 
@@ -22,11 +29,6 @@ auto wall::Wallock::start(int argc, const char** argv) -> void {
         wall::Log::setup_debug_logger(config);
     } else {
         wall::Log::setup_default_logger(config);
-    }
-
-    if (!ConfigValidator::validate(config)) {
-        LOG_FATAL("Config validation failed");
-        return;
     }
 
     Loop loop;
