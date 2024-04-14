@@ -18,7 +18,7 @@ auto wall::FileUtils::get_default_data_dir() -> std::filesystem::path {
     }
 
     auto* home = std::getenv("HOME");
-    if (home != nullptr) {
+    if (home != nullptr && std::filesystem::exists(home)) {
         return std::filesystem::path{home} / ".local/share/wallock";
     }
     return "/tmp/wallock";
