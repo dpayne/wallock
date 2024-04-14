@@ -4,7 +4,6 @@
 #include <xf86drm.h>
 #include <xkbcommon/xkbcommon.h>
 #include <chrono>
-#include <tuple>
 #include "conf/ConfigMacros.hpp"
 #include "display/PrimaryDisplayState.hpp"
 #include "input/Keyboard.hpp"
@@ -53,6 +52,7 @@ wall::Display::Display(const Config& config,
 
     m_display_poll = m_loop->add_poll(wl_display_get_fd(m_wl_display), static_cast<int16_t>(POLLIN),
                                       [this](loop::Poll*, uint16_t) { m_is_dispatch_pending = true; });
+    m_display_wake = m_loop->add_poll_pipe([](loop::PollPipe*, const std::vector<uint8_t>&) { LOG_DEBUG("Display wake"); });
     check_for_failure();
 }
 
@@ -64,6 +64,12 @@ wall::Display::~Display() {
 }
 
 auto wall::Display::is_nvidia() const -> bool { return m_is_nvidia; }
+
+auto wall::Display::wake() -> void {
+    if (m_display_wake != nullptr) {
+        m_display_wake->write_one();
+    }
+}
 
 auto wall::Display::create_lock() -> void {
     stop_pause_timer();
@@ -167,6 +173,12 @@ auto wall::Display::loop() -> void {
             stop_now();
 
             m_renderer_creator = nullptr;
+
+            if (m_display_wake != nullptr) {
+                m_display_wake->close();
+                m_display_wake = nullptr;
+            }
+
             if (m_display_poll != nullptr) {
                 m_display_poll->close();
                 m_display_poll = nullptr;

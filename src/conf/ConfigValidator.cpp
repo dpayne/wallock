@@ -27,11 +27,13 @@ auto wall::ConfigValidator::is_resource_paths_valid(const Config& config) -> boo
         return false;
     }
 
-    const auto is_file_path_valid = file_path_str.empty() || is_resource_path_valid(file_path_str);
     // file path only matters if lock path or wallpaper path is not provided
-    if (!is_file_path_valid && (lock_path_str.empty() || wallpaper_path_str.empty())) {
-        LOG_FATAL("Invalid file path provided, please provide a valid file path.");
-        return false;
+    if (wallpaper_path_str.empty() || lock_path_str.empty()) {
+        const auto is_file_path_valid = file_path_str.empty() || is_resource_path_valid(file_path_str);
+        if (!is_file_path_valid) {
+            LOG_FATAL("Invalid file path provided, please provide a valid file path.");
+            return false;
+        }
     }
 
     return true;

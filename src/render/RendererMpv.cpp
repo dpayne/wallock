@@ -1,5 +1,6 @@
 #include "render/RendererMpv.hpp"
 
+#include <EGL/egl.h>
 #include <mpv/render_gl.h>
 #include <wayland-client-protocol.h>
 #include <array>
@@ -73,6 +74,10 @@ auto wall::RendererMpv::render(Surface* surface) -> void {
 
         setup_next_frame_callback(surface);
         set_is_dirty(false);
+        err_code = eglGetError();
+        if (err_code != EGL_SUCCESS) {
+            LOG_ERROR("Error after rendering: {}", err_code);
+        }
 
         if (eglSwapBuffers(m_egl_display, get_surface_egl().get_egl_surface()) == EGL_FALSE) {
             LOG_ERROR("Couldn't swap buffers {} for {}", eglGetError(), surface->get_output_name());

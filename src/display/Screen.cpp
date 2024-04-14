@@ -154,6 +154,7 @@ auto wall::Screen::on_done() -> void {
     LOG_DEBUG("Screen::on_done: {}", m_output_state.m_name);
 
     m_is_done = true;
+    m_display->wake();
 }
 
 auto wall::Screen::on_scale(int32_t factor) -> void {
