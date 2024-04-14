@@ -50,8 +50,6 @@ class Surface {
 
     [[nodiscard]] auto get_scale_factor() const -> int32_t;
 
-    auto render() -> void;
-
     [[nodiscard]] auto get_renderer() const -> const Renderer&;
 
     [[nodiscard]] auto get_renderer_mut() -> Renderer*;

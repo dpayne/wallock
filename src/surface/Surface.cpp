@@ -192,14 +192,6 @@ auto wall::Surface::create_surface() -> void {
     m_bar = std::make_unique<CairoBarSurface>(get_config(), this, get_subpixel());
 }
 
-auto wall::Surface::render() -> void {
-    if (m_renderer != nullptr) {
-        m_renderer->render(this);
-    } else {
-        LOG_ERROR("No renderer set for surface {} {}", get_output_name(), static_cast<uint32_t>(get_resource_mode()));
-    }
-}
-
 auto wall::Surface::draw_overlay() -> void {
     if (m_indicator == nullptr || m_bar == nullptr) {
         return;

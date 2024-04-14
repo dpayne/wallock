@@ -210,12 +210,6 @@ auto wall::MpvResource::setup_update_callback() -> void {
         this);
 }
 
-auto wall::MpvResource::handle_mpv_update() -> void {
-    mpv_render_context_update(get_mpv_context());
-
-    m_surface->get_renderer_mut()->render(m_surface);
-}
-
 auto wall::MpvResource::setup_event_handlers() -> void {
     if (m_event_handler != nullptr) {
         m_event_handlers.emplace_back(m_event_handler->add_event_handler(

@@ -85,7 +85,6 @@ auto wall::RendererMpv::render(Surface* surface) -> void {
             return;
         }
 
-        set_has_buffer(true);
         surface->draw_overlay();
     }
 }

@@ -75,8 +75,6 @@ class MpvResource : public std::enable_shared_from_this<MpvResource> {
 
     auto setup_update_callback() -> void;
 
-    auto handle_mpv_update() -> void;
-
    private:
     static auto get_proc_address(void* ctx, const char* name) -> void*;
 

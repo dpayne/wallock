@@ -22,6 +22,7 @@ const wl_callback_listener wall::Renderer::k_frame_listener = {
             if (callback_data->m_is_valid && callback_data->m_renderer != nullptr && callback_data->m_surface != nullptr) {
                 callback_data->m_renderer->m_last_callback_data = nullptr;
                 callback_data->m_renderer->m_last_callback = nullptr;
+                callback_data->m_renderer->set_has_buffer(true);
                 callback_data->m_renderer->render(callback_data->m_surface);
             } else {
                 // happens when the callback is destroyed before it is called
