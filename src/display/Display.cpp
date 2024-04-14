@@ -6,6 +6,7 @@
 #include <chrono>
 #include "conf/ConfigMacros.hpp"
 #include "display/PrimaryDisplayState.hpp"
+#include "display/Screen.hpp"
 #include "input/Keyboard.hpp"
 #include "mpv/MpvResourceConfig.hpp"
 #include "pam/PasswordManager.hpp"
@@ -204,6 +205,7 @@ auto wall::Display::create_pending_surfaces() -> bool {
     if (m_registry != nullptr) {
         for (const auto& screen : m_registry->get_screens()) {
             if (screen->is_done()) {
+                // this happens during startup
                 if (screen->get_lock_surface_mut() == nullptr && screen->get_wallpaper_surface_mut() == nullptr) {
                     LOG_DEBUG("Creating surfaces for screen: {}", screen->get_output_state().m_name);
                     if (is_locked()) {
@@ -213,12 +215,28 @@ auto wall::Display::create_pending_surfaces() -> bool {
                     }
 
                     is_created = true;
+                } else {
+                    recreate_failed_renderers(screen.get());
                 }
             }
         }
     }
 
     return is_created;
+}
+
+auto wall::Display::recreate_failed_renderers(Screen* screen) -> void {
+    if (screen->get_lock_surface_mut() != nullptr && screen->get_lock_surface_mut()->get_renderer_mut() != nullptr &&
+        screen->get_lock_surface_mut()->get_renderer_mut()->is_recreate_egl_surface()) {
+        LOG_DEBUG("Recreating lock surface for screen: {}", screen->get_output_state().m_name);
+        screen->destroy_lock_surface();
+        screen->create_lock_surface(m_lock.get());
+    } else if (screen->get_wallpaper_surface_mut() != nullptr && screen->get_wallpaper_surface_mut()->get_renderer_mut() != nullptr &&
+               screen->get_wallpaper_surface_mut()->get_renderer_mut()->is_recreate_egl_surface()) {
+        LOG_DEBUG("Recreating wallpaper surface for screen: {}", screen->get_output_state().m_name);
+        screen->destroy_wallpaper_surface();
+        screen->create_wallpaper_surface();
+    }
 }
 
 auto wall::Display::is_configured() const -> bool {

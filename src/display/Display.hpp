@@ -72,6 +72,8 @@ class Display {
 
     [[nodiscard]] auto create_pending_surfaces() -> bool;
 
+    auto recreate_failed_renderers(Screen* screen) -> void;
+
     auto unlock() -> void;
 
     auto setup_keyboard_callback() -> void;

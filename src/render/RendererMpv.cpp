@@ -81,6 +81,7 @@ auto wall::RendererMpv::render(Surface* surface) -> void {
 
         if (eglSwapBuffers(m_egl_display, get_surface_egl().get_egl_surface()) == EGL_FALSE) {
             LOG_ERROR("Couldn't swap buffers {} for {}", eglGetError(), surface->get_output_name());
+            set_is_recreate_egl_surface(true);
             return;
         }
 

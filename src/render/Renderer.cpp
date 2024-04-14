@@ -70,7 +70,7 @@ auto wall::Renderer::set_has_buffer(bool has_buffer) -> void { m_has_buffer = ha
 
 auto wall::Renderer::is_callback_scheduled() const -> bool { return m_last_callback != nullptr; }
 
-auto wall::Renderer::is_recreate_egl_suface() const -> bool { return m_is_recreate_egl_surface; }
+auto wall::Renderer::is_recreate_egl_surface() const -> bool { return m_is_recreate_egl_surface; }
 
 auto wall::Renderer::set_is_recreate_egl_surface(bool is_recreate_egl_surface) -> void { m_is_recreate_egl_surface = is_recreate_egl_surface; }
 
