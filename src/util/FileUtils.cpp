@@ -28,7 +28,7 @@ auto wall::FileUtils::get_default_runtime_dir() -> std::filesystem::path {
     auto runtime_dir = std::filesystem::path{};
 
     auto* xdg_runtime_home = std::getenv("XDG_RUNTIME_DIR");
-    if (xdg_runtime_home != nullptr) {
+    if (xdg_runtime_home != nullptr && std::filesystem::exists(xdg_runtime_home)) {
         runtime_dir = std::filesystem::path{xdg_runtime_home} / "wallock";
     } else {
         runtime_dir = "/tmp/wallock";

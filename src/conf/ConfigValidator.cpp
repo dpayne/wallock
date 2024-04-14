@@ -6,7 +6,7 @@
 #include "util/FileUtils.hpp"
 
 auto wall::ConfigValidator::validate(const Config& config) -> bool {
-    return is_resource_paths_valid(config) && is_pam_file_installed(config) && !is_already_running(config);
+    return is_resource_paths_valid(config) && is_pam_file_installed() && !is_already_running(config);
 }
 
 auto wall::ConfigValidator::is_resource_paths_valid(const Config& config) -> bool {
@@ -58,7 +58,7 @@ auto wall::ConfigValidator::is_resource_path_valid(std::string_view path_str) ->
     return true;
 }
 
-auto wall::ConfigValidator::is_pam_file_installed(const Config& config) -> bool {
+auto wall::ConfigValidator::is_pam_file_installed() -> bool {
     const auto pam_file_path = std::filesystem::path{"/etc/pam.d/wallock"};
     if (!std::filesystem::exists(pam_file_path)) {
         LOG_ERROR("Pam file not found at path: {}", pam_file_path.string());

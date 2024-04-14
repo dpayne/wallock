@@ -12,7 +12,7 @@ class ConfigValidator {
 
     static auto is_resource_path_valid(std::string_view path_str) -> bool;
 
-    static auto is_pam_file_installed(const Config& config) -> bool;
+    static auto is_pam_file_installed() -> bool;
 
     static auto is_already_running(const Config& config) -> bool;
 };
