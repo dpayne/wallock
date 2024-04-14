@@ -69,13 +69,20 @@ auto wall::ConfigValidator::is_pam_file_installed(const Config& config) -> bool 
 }
 
 auto wall::ConfigValidator::is_already_running(const Config& config) -> bool {
+    const auto cmd = wall_conf_get(config, command, name);
     const auto is_ignore_running = wall_conf_get(config, command, ignore_is_running);
+    const auto is_running = CommandProcessor::is_running(config);
+
+    if (!cmd.empty() && !is_running) {
+        LOG_ERROR("Command specified but no instance is running. Run without a command to start a new instance first.");
+        return false;
+    }
+
     if (is_ignore_running) {
         return false;
     }
-    const auto cmd = wall_conf_get(config, command, name);
 
-    if (cmd.empty() && CommandProcessor::is_running(config)) {
+    if (cmd.empty() && is_running) {
         LOG_ERROR("Already running, if this is a mistake, please remove the file: {}", CommandProcessor::get_socket_filename(config).string());
         return true;
     }
