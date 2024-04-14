@@ -14,13 +14,14 @@ TEST(FileUtilsTest, expand_home) {
 
 TEST(FileUtilsTest, expand_runtime) {
     setenv("HOME", "/home/wall", 1);
-    setenv("XDG_RUNTIME_DIR", "/run/user/1000/", 1);
+    setenv("XDG_RUNTIME_DIR", "/tmp/test_runtime_dir", 1);
+    std::filesystem::create_directories("/tmp/test_runtime_dir/wallock");
     auto result = wall::FileUtils::get_default_runtime_dir();
-    std::string expected = "/run/user/1000/wallock";
+    std::string expected = "/tmp/test_runtime_dir/wallock";
     EXPECT_EQ(result, expected);
 
     auto result1 = wall::FileUtils::expand_path("$XDG_RUNTIME_DIR/wallock1");
-    expected = "/run/user/1000/wallock1";
+    expected = "/tmp/test_runtime_dir/wallock1";
     EXPECT_EQ(result1, expected);
 
     unsetenv("XDG_RUNTIME_DIR");
@@ -30,14 +31,15 @@ TEST(FileUtilsTest, expand_runtime) {
 }
 
 TEST(FileUtilsTest, expand_data_dir) {
-    setenv("HOME", "/home/wall", 1);
-    setenv("XDG_DATA_HOME", "/home/wall/test", 1);
+    setenv("HOME", "/tmp/home_wall", 1);
+    setenv("XDG_DATA_HOME", "/tmp/home_wall/wall/test", 1);
+    std::filesystem::create_directories("/tmp/home_wall/wall/test/wallock");
     auto result = wall::FileUtils::get_default_data_dir();
-    std::string expected = "/home/wall/test/wallock";
+    std::string expected = "/tmp/home_wall/wall/test/wallock";
     EXPECT_EQ(result, expected);
 
     unsetenv("XDG_DATA_HOME");
-    expected = "/home/wall/.local/share/wallock";
+    expected = "/tmp/home_wall/.local/share/wallock";
     result = wall::FileUtils::get_default_data_dir();
     EXPECT_EQ(result, expected);
 
