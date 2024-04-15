@@ -42,6 +42,7 @@ struct MpvResourceConfig {
     bool m_is_screenshot_enabled{conf::k_default_file_screenshot_enabled};
     bool m_is_screenshot_cache_enabled{conf::k_default_file_screenshot_cache_enabled};
     bool m_is_reload_colors_on_success{conf::k_default_file_screenshot_reload_on_done};
+    bool m_is_loop{conf::k_default_file_loop};
     std::string m_screenshot_directory{conf::k_default_file_screenshot_directory};
     std::chrono::milliseconds m_screenshot_delay_ms{std::chrono::milliseconds(conf::k_default_file_screenshot_delay_ms)};
     std::string m_screenshot_done_cmd{conf::k_default_file_screenshot_done_cmd};

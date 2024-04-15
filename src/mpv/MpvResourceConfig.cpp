@@ -21,6 +21,7 @@ auto wall::MpvResourceConfig::build_config(const Config& config, const char* con
     resource_config.m_is_mute = get_config_with_fallback<bool>(config, config_prefix, "mute");
     const auto fit_mode = StringUtils::trim(get_config_with_fallback<std::string>(config, config_prefix, "fit"));
     const auto order = StringUtils::trim(get_config_with_fallback<std::string>(config, config_prefix, "sort_order"));
+    resource_config.m_is_loop = get_config_with_fallback<bool>(config, config_prefix, "loop");
     resource_config.m_is_keep_same_order = get_config_with_fallback<bool>(config, config_prefix, "keep_same_order");
     resource_config.m_image_change_interval_secs =
         std::chrono::seconds(get_config_with_fallback<uint64_t>(config, config_prefix, "image_change_interval_secs"));
