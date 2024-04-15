@@ -9,7 +9,7 @@
 [![Actions Status](https://github.com/dpayne/wallock/workflows/format/badge.svg)](https://github.com/dpayne/wallock/actions)
 [![codecov](https://codecov.io/gh/dpayne/wallock/graph/badge.svg?token=WKMH3L9ZGV)](https://codecov.io/gh/dpayne/wallock)
 
-wallock is a wallpaper and lock screen that enables macos like lock screens and wallapers on wayland. It is designed to work with wlroots based wayland compositors (sway, hyprland, etc..).
+wallock is a wallpaper and lock screen that enables macos like lock screens and wallapers on wayland. It is designed to work with wlroots based wayland compositors that implements the ext-session-lock-v1 protocol (sway, hyprland, etc..).
 
 ## Demo
 

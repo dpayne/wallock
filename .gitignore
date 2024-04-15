@@ -33,6 +33,8 @@
 
 build
 build-static
+build_release
+out.log
 wallock
 !wallock/
 wallock_test
