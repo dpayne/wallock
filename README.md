@@ -17,6 +17,16 @@ wallock is a wallpaper and lock screen that enables macos like lock screens and 
 
 ![Example 2](https://github.com/dpayne/wallock/assets/1331138/7a9e26c3-a4b9-4497-8b94-164c70466d6d)
 
+# Installation
+
+## Arch Linux
+
+```
+yay -S wallock
+```
+
+# Build from source
+
 ## Dependencies
 
 ### Arch Linux
@@ -39,7 +49,7 @@ wget -P ~/.local/share/fonts https://github.com/ryanoasis/nerd-fonts/releases/do
 cd ~/.local/share/fonts && unzip FiraCode.zip && rm FiraCode.zip && fc-cache -fv
 ```
 
-## Build and install from source
+## Building
 
 Use the following command to build and run the executable target.
 
