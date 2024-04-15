@@ -277,7 +277,11 @@ auto wall::MpvResource::get_proc_address(void* /* ctx */, const char* name) -> v
 auto wall::MpvResource::handle_file_loaded() -> void {
     auto file_duration = 0.0;
     mpv_get_property(m_mpv, "duration", MPV_FORMAT_DOUBLE, &file_duration);
-    m_file_loader->setup_load_next_file_timer(file_duration);
+
+    // if loop is set, then keep the first loaded resource and loop forever
+    if (!m_resource_config.m_is_loop) {
+        m_file_loader->setup_load_next_file_timer(file_duration);
+    }
 
     m_is_single_frame = file_duration == 0.0;
 

@@ -58,6 +58,7 @@ void wall::conf::setup_settings() {
     wall_conf_set(file, mute);
     wall_conf_set(file, fit);
     wall_conf_set(file, sort_order);
+    wall_conf_set(file, loop);
     wall_conf_set(file, keep_same_order);
     wall_conf_set(file, image_change_interval_secs);
     wall_conf_set(file, video_preload_secs);
@@ -80,6 +81,7 @@ void wall::conf::setup_settings() {
     wall_conf_set(wallpaper, mute);
     wall_conf_set(wallpaper, fit);
     wall_conf_set(wallpaper, sort_order);
+    wall_conf_set(wallpaper, loop);
     wall_conf_set(wallpaper, keep_same_order);
     wall_conf_set(wallpaper, image_change_interval_secs);
     wall_conf_set(wallpaper, video_preload_secs);
@@ -98,6 +100,7 @@ void wall::conf::setup_settings() {
     wall_conf_set(lock, mute);
     wall_conf_set(lock, fit);
     wall_conf_set(lock, sort_order);
+    wall_conf_set(lock, loop);
     wall_conf_set(lock, keep_same_order);
     wall_conf_set(lock, image_change_interval_secs);
     wall_conf_set(lock, video_preload_secs);

@@ -64,6 +64,7 @@ These options have an equivalent setting that is specific to the wallpaper or lo
 | file_mute | true | Enabling or disabling muting of resources. |
 | file_fit | fill | Options are fit or fill. |
 | file_sort_order | random | Sort order for resources, options are random or alpha. |
+| file_loop | false | Loop the first loaded resource. |
 | file_keep_same_order | false | Enforces the same ordering of resources between multiple monitors. |
 | file_image_change_interval_secs | 900 | How long to display an image for before rotating. |
 | file_video_preload_secs | 1 | How long before the current resource finishes before loading the next. Note this may cutoff the end of a video. |
@@ -90,6 +91,7 @@ These options have an equivalent setting that is specific to the wallpaper or lo
 | wallpaper_mute | true |  |
 | wallpaper_fit | fill |  |
 | wallpaper_sort_order | random |  |
+| wallpaper_loop | false |  |
 | wallpaper_keep_same_order | false |  |
 | wallpaper_image_change_interval_secs | 900 |  |
 | wallpaper_video_preload_secs | 1 |  |
@@ -112,6 +114,7 @@ These options have an equivalent setting that is specific to the wallpaper or lo
 | lock_mute | true |  |
 | lock_fit | fill |  |
 | lock_sort_order | random |  |
+| lock_loop | false |  |
 | lock_keep_same_order | false |  |
 | lock_image_change_interval_secs | 900 |  |
 | lock_video_preload_secs | 1 |  |
