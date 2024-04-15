@@ -35,6 +35,8 @@ yay -S wallock
 sudo pacman -S base-devel git cmake wayland wayland-protocols egl-wayland libxkbcommon mesa mpv cairo ttf-firacode-nerd otf-firamono-nerd libdrm
 ```
 
+**Aur package:** https://aur.archlinux.org/packages/wallock
+
 ### Ubuntu
 
 ```
