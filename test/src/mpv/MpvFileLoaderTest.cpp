@@ -17,7 +17,7 @@ TEST(MpvFileLoaderTest, test_file_load_empty_files) {
 
     wall::MpvResourceConfig resource_config = wall::MpvResourceConfig::build_config(config, wall::ResourceMode::Wallpaper);
 
-    wall::MpvFileLoader loader(config, &loop, &resource_config, &primary_state,
+    wall::MpvFileLoader loader(config, &loop, &resource_config, &primary_state, "",
                                [&](const std::string& file) { EXPECT_EQ(file, std::string{"/tmp/doesnotexist"}); });
 
     loader.load_next_file();
@@ -39,7 +39,7 @@ TEST(MpvFileLoaderTest, test_file_load_single_file) {
     wall::PrimaryDisplayState primary_state;
 
     wall::MpvResourceConfig resource_config = wall::MpvResourceConfig::build_config(config, wall::ResourceMode::Wallpaper);
-    wall::MpvFileLoader loader(config, &loop, &resource_config, &primary_state,
+    wall::MpvFileLoader loader(config, &loop, &resource_config, &primary_state, "",
                                [&](const std::string& file_loaded) { EXPECT_STREQ(file_loaded.c_str(), "/tmp/test_1.png"); });
     loader.load_options();
     loader.load_next_file();
@@ -80,7 +80,7 @@ TEST(MpvFileLoaderTest, test_file_load_folder) {
     wall::Loop loop;
 
     wall::MpvResourceConfig resource_config = wall::MpvResourceConfig::build_config(config, wall::ResourceMode::Wallpaper);
-    wall::MpvFileLoader loader(config, &loop, &resource_config, &primary_state, [&](const std::string& /* file_loaded */) {});
+    wall::MpvFileLoader loader(config, &loop, &resource_config, &primary_state, "", [&](const std::string& /* file_loaded */) {});
     loader.load_options();
     loader.load_next_file();
 
@@ -126,7 +126,7 @@ TEST(MpvFileLoaderTest, global_order) {
     wall::Loop loop;
 
     wall::MpvResourceConfig resource_config = wall::MpvResourceConfig::build_config(config, wall::ResourceMode::Wallpaper);
-    wall::MpvFileLoader loader(config, &loop, &resource_config, &primary_state, [&](const std::string& /* file_loaded */) {});
+    wall::MpvFileLoader loader(config, &loop, &resource_config, &primary_state, "", [&](const std::string& /* file_loaded */) {});
     loader.load_options();
 
     ASSERT_EQ(primary_state.m_wallpaper_files.size(), 3);
@@ -164,7 +164,7 @@ TEST(MpvFileLoaderTest, global_order_reshuffle) {
     wall::Loop loop;
 
     wall::MpvResourceConfig resource_config = wall::MpvResourceConfig::build_config(config, wall::ResourceMode::Wallpaper);
-    wall::MpvFileLoader loader(config, &loop, &resource_config, &primary_state, [&](const std::string& /* file_loaded */) {});
+    wall::MpvFileLoader loader(config, &loop, &resource_config, &primary_state, "", [&](const std::string& /* file_loaded */) {});
     loader.load_options();
 
     ASSERT_EQ(primary_state.m_wallpaper_files.size(), 3);
@@ -203,7 +203,7 @@ TEST(MpvFileLoaderTest, timer) {
     bool timer_called = false;
 
     wall::MpvResourceConfig resource_config = wall::MpvResourceConfig::build_config(config, wall::ResourceMode::Wallpaper);
-    wall::MpvFileLoader loader(config, &loop, &resource_config, &primary_state, [&](const std::string&) {
+    wall::MpvFileLoader loader(config, &loop, &resource_config, &primary_state, "", [&](const std::string&) {
         loader_ptr->stop();
         timer_called = true;
     });
