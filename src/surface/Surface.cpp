@@ -57,6 +57,10 @@ auto wall::Surface::set_mpv_resource(std::shared_ptr<MpvResource> resource) -> v
     }
 }
 
+auto wall::Surface::set_next_resource_override(std::filesystem::path resource) -> void { m_next_resource_override = std::move(resource); }
+
+auto wall::Surface::get_next_resource_override() const -> const std::filesystem::path& { return m_next_resource_override; }
+
 auto wall::Surface::copy_mpv_resource() -> std::shared_ptr<MpvResource> { return m_mpv_resource; }
 
 auto wall::Surface::get_registry() const -> Registry* { return m_registry; }

@@ -18,6 +18,7 @@ class MpvFileLoader {
                   Loop* loop,
                   MpvResourceConfig* resource_config,
                   PrimaryDisplayState* primary_state,
+                  std::filesystem::path next_resource_override,
                   std::function<void(std::string)> on_load_file);
 
     virtual ~MpvFileLoader();
@@ -80,5 +81,7 @@ class MpvFileLoader {
     loop::Timer* m_load_next_file_timer{};
 
     std::filesystem::path m_current_file;
+
+    std::filesystem::path m_next_resource_override;
 };
 }  // namespace wall

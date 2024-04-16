@@ -3,6 +3,7 @@
 #include <wayland-client-core.h>
 #include <wayland-client-protocol.h>
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 #include "State.hpp"
 #include "mpv/MpvResource.hpp"
@@ -102,6 +103,10 @@ class Surface {
 
     virtual auto destroy_resources() -> void;
 
+    [[nodiscard]] auto get_next_resource_override() const -> const std::filesystem::path&;
+
+    auto set_next_resource_override(std::filesystem::path next_resource_override) -> void;
+
    protected:
     [[nodiscard]] auto get_config() const -> const Config&;
 
@@ -155,5 +160,7 @@ class Surface {
     std::unique_ptr<CairoIndicatorSurface> m_indicator{nullptr};
 
     std::unique_ptr<CairoBarSurface> m_bar{nullptr};
+
+    std::filesystem::path m_next_resource_override{};
 };
 }  // namespace wall

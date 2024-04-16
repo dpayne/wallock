@@ -30,6 +30,7 @@ wall::MpvResource::MpvResource(const Config& config,
                                                     display->get_loop(),
                                                     &m_resource_config,
                                                     display->get_primary_state_mut(),
+                                                    surface->get_next_resource_override(),
                                                     [&](const std::string& file) { send_mpv_cmd("loadfile", file.c_str()); })} {
     if (m_mpv == nullptr) {
         LOG_FATAL("Couldn't create mpv handle");

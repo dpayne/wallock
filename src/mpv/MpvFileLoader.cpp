@@ -21,8 +21,14 @@ wall::MpvFileLoader::MpvFileLoader(const Config& config,
                                    Loop* loop,
                                    MpvResourceConfig* resource_config,
                                    PrimaryDisplayState* primary_state,
+                                   std::filesystem::path next_resource_override,
                                    std::function<void(std::string)> on_load_file)
-    : m_config{config}, m_loop{loop}, m_resource_config{resource_config}, m_primary_state{primary_state}, m_on_load_file(std::move(on_load_file)) {}
+    : m_config{config},
+      m_loop{loop},
+      m_resource_config{resource_config},
+      m_primary_state{primary_state},
+      m_on_load_file(std::move(on_load_file)),
+      m_next_resource_override{std::move(next_resource_override)} {}
 
 wall::MpvFileLoader::~MpvFileLoader() { stop(); }
 
@@ -130,6 +136,15 @@ auto wall::MpvFileLoader::setup_load_next_file_timer([[maybe_unused]] double fil
 }
 
 auto wall::MpvFileLoader::load_next_file() -> void {
+    if (!m_next_resource_override.empty()) {
+        LOG_DEBUG("Loading next resource override: {}", m_next_resource_override.string());
+
+        m_current_file = m_next_resource_override;
+        m_on_load_file(m_next_resource_override);
+        m_next_resource_override = "";
+        return;
+    }
+
     // Check if there are files to load
     if (m_files.empty()) {
         LOG_DEBUG("No files to load");

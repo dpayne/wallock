@@ -4,6 +4,7 @@
 #include <xf86drm.h>
 #include <xkbcommon/xkbcommon.h>
 #include <chrono>
+#include <filesystem>
 #include "conf/ConfigMacros.hpp"
 #include "display/PrimaryDisplayState.hpp"
 #include "display/Screen.hpp"
@@ -247,13 +248,25 @@ auto wall::Display::recreate_failed_renderers(Screen* screen) -> void {
     if (screen->get_lock_surface_mut() != nullptr && screen->get_lock_surface_mut()->get_renderer_mut() != nullptr &&
         screen->get_lock_surface_mut()->get_renderer_mut()->is_recreate_egl_surface()) {
         LOG_DEBUG("Recreating lock surface for screen: {}", screen->get_output_state().m_name);
+        auto* mpv_resource = screen->get_lock_surface_mut()->get_mpv_resource();
+        std::filesystem::path current_file;
+        if (mpv_resource != nullptr) {
+            current_file = mpv_resource->get_current_file();
+        }
         screen->destroy_lock_surface();
         screen->create_lock_surface(m_lock.get());
+        screen->get_lock_surface_mut()->set_next_resource_override(current_file);
     } else if (screen->get_wallpaper_surface_mut() != nullptr && screen->get_wallpaper_surface_mut()->get_renderer_mut() != nullptr &&
                screen->get_wallpaper_surface_mut()->get_renderer_mut()->is_recreate_egl_surface()) {
         LOG_DEBUG("Recreating wallpaper surface for screen: {}", screen->get_output_state().m_name);
+        auto* mpv_resource = screen->get_wallpaper_surface_mut()->get_mpv_resource();
+        std::filesystem::path current_file;
+        if (mpv_resource != nullptr) {
+            current_file = mpv_resource->get_current_file();
+        }
         screen->destroy_wallpaper_surface();
         screen->create_wallpaper_surface();
+        screen->get_wallpaper_surface_mut()->set_next_resource_override(current_file);
     }
 }
 
