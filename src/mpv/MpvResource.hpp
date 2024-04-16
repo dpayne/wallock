@@ -80,6 +80,8 @@ class MpvResource : public std::enable_shared_from_this<MpvResource> {
 
     const Config& m_config;
 
+    bool m_is_mpv_log_enabled{false};
+
     bool m_is_single_frame{false};
 
     Display* m_display{};

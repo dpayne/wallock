@@ -57,6 +57,7 @@ wall_conf_key(grace, period_secs, 2, "Grace period in seconds for disabling pass
 wall_conf_key(input_inhibitor, enforce, false, "Fail if input inhibitor is not found.")
 wall_conf_key(general, daemonize, true, "Daemonize, run in background.")
 wall_conf_key(general, force_software_rendering, false, "Force software rendering.")
+wall_conf_key(general, mpv_logging_enabled, false, "Enable mpv logging.")
 wall_conf_key(command, socket_backlog, 128, "Number of connections to allow in the socket backlog.")
 wall_conf_key(command, socket_filename, "wallock.sock", "Socket filename.")
 

@@ -34,6 +34,8 @@ wall::MpvResource::MpvResource(const Config& config,
     if (m_mpv == nullptr) {
         LOG_FATAL("Couldn't create mpv handle");
     }
+
+    m_is_mpv_log_enabled = wall_conf_get(config, general, mpv_logging_enabled);
 }
 
 wall::MpvResource::~MpvResource() {
@@ -133,22 +135,22 @@ auto wall::MpvResource::setup() -> void {
     const auto is_force_software_rendering = wall_conf_get(get_config(), general, force_software_rendering);
     if (is_force_software_rendering) {
         mpv_set_option_string(m_mpv, "vo", "libmpv");
+    } else {
+        mpv_set_option_string(m_mpv, "hwdec", "auto");
+        mpv_set_option_string(m_mpv, "hwdec-codecs", "all");
+        mpv_set_option_string(m_mpv, "hwdec-image-format", "auto");
+        mpv_set_option_string(m_mpv, "hwdec-image-codecs", "all");
+        mpv_set_option_string(m_mpv, "hwdec-interop", "auto");
     }
 
     if (mpv_initialize(m_mpv) < 0) {
         LOG_FATAL("mpv init failed");
     }
 
-#ifdef NDEBUG
-    // disable terminal output in release mode
-    send_mpv_cmd("set", "terminal", "no");
-#else
-    if (get_config().is_debug()) {
+    if (m_is_mpv_log_enabled || get_config().is_debug()) {
         send_mpv_cmd("set", "terminal", "yes");
-        // setup mpv debug log
         send_mpv_cmd("set", "msg-level", "all=v");
     }
-#endif
 
     mpv_opengl_init_params init_params = {
         .get_proc_address = get_proc_address,
