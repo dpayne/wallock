@@ -68,6 +68,13 @@ auto wall::loop::PollPipe::callback_wrapper(int16_t events) -> void {
             LOG_ERROR("Failed to read from pipe");
             return;
         }
+
+        if (read_bytes == 0) {
+            LOG_ERROR("Pipe closed");
+            close();
+            return;
+        }
+
         buffer.resize(read_bytes);
 
         m_callback(this, buffer);
@@ -293,7 +300,12 @@ auto wall::Loop::poll_fds(std::chrono::milliseconds min_timeout) -> void {
     }
 
     if (!fds.empty()) {
-        poll(fds.data(), fds.size(), min_timeout.count());
+        auto err_code = poll(fds.data(), fds.size(), min_timeout.count());
+        if (err_code == -1) {
+            LOG_ERROR("Failed to poll fds {}", strerror(errno));
+            return;
+        }
+
         for (auto i = 0UL; i < fds.size(); i++) {
             auto* poll_handle = polls[i];
             if (!poll_handle->is_closing() && (fds[i].revents & poll_handle->get_trigger_events()) != 0) {

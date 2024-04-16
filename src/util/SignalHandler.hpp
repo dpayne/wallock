@@ -5,7 +5,7 @@ namespace wall {
 class Wallock;
 class SignalHandler {
    public:
-    SignalHandler(const Config* config);
+    SignalHandler(const Config* config, Wallock* wallock);
     ~SignalHandler();
 
     SignalHandler(const SignalHandler& other) = delete;

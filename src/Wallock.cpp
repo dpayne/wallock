@@ -91,7 +91,7 @@ auto wall::Wallock::run(bool is_lock) -> void {
         m_display = nullptr;
 
         m_command_processor = std::make_unique<wall::CommandProcessor>(this);
-        m_signal_handler = std::make_unique<wall::SignalHandler>(&get_config());
+        m_signal_handler = std::make_unique<wall::SignalHandler>(&get_config(), this);
         if (!m_command_processor->start_listening()) {
             LOG_FATAL("Failed to start listening");
             return;
@@ -107,6 +107,7 @@ auto wall::Wallock::run(bool is_lock) -> void {
 
         if (!m_is_full_reloading) {
             // we exited the loop and we are not reloading, so we are done
+            LOG_DEBUG("Exiting...");
             break;
         }
 

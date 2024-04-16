@@ -74,6 +74,8 @@ class Display {
 
     auto recreate_failed_renderers(Screen* screen) -> void;
 
+    auto close_loop() -> void;
+
     auto unlock() -> void;
 
     auto setup_keyboard_callback() -> void;

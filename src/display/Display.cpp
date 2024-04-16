@@ -51,8 +51,16 @@ wall::Display::Display(const Config& config,
     }
     roundtrip();
 
-    m_display_poll = m_loop->add_poll(wl_display_get_fd(m_wl_display), static_cast<int16_t>(POLLIN),
-                                      [this](loop::Poll*, uint16_t) { m_is_dispatch_pending = true; });
+    m_display_poll = m_loop->add_poll(wl_display_get_fd(m_wl_display), static_cast<int16_t>(POLLIN), [this](loop::Poll*, uint16_t events) {
+        if ((events & POLLIN) != 0) {
+            m_is_dispatch_pending = true;
+        }
+
+        else {
+            LOG_ERROR("Invalid poll event on display fd");
+            stop();
+        }
+    });
     m_display_wake = m_loop->add_poll_pipe([](loop::PollPipe*, const std::vector<uint8_t>&) { LOG_DEBUG("Display wake"); });
     check_for_failure();
 }
@@ -145,6 +153,7 @@ auto wall::Display::loop() -> void {
         }
 
         wl_display_flush(m_wl_display);
+
         m_is_dispatch_pending = false;
         if (!m_loop->run()) {
             break;
@@ -153,7 +162,10 @@ auto wall::Display::loop() -> void {
         if (!m_is_dispatch_pending) {
             wl_display_cancel_read(m_wl_display);
         } else {
-            wl_display_read_events(m_wl_display);
+            if (wl_display_read_events(m_wl_display) == -1) {
+                LOG_ERROR("Failed to read events");
+                stop();
+            }
         }
 
         wl_display_dispatch_pending(m_wl_display);
@@ -171,19 +183,25 @@ auto wall::Display::loop() -> void {
         }
 
         if (m_is_shutting_down) {
-            stop_now();
+            close_loop();
+        }
+    }
+}
+auto wall::Display::close_loop() -> void {
+    stop_now();
+    if (m_is_shutting_down) {
+        stop_now();
 
-            m_renderer_creator = nullptr;
+        m_renderer_creator = nullptr;
 
-            if (m_display_wake != nullptr) {
-                m_display_wake->close();
-                m_display_wake = nullptr;
-            }
+        if (m_display_wake != nullptr) {
+            m_display_wake->close();
+            m_display_wake = nullptr;
+        }
 
-            if (m_display_poll != nullptr) {
-                m_display_poll->close();
-                m_display_poll = nullptr;
-            }
+        if (m_display_poll != nullptr) {
+            m_display_poll->close();
+            m_display_poll = nullptr;
         }
     }
 }
