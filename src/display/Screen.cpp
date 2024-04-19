@@ -186,6 +186,11 @@ auto wall::Screen::create_lock_surface(Lock* lock, std::shared_ptr<MpvResource> 
         return;
     }
 
+    if (m_output_state.m_name.starts_with("HEADLESS-")) {
+        LOG_DEBUG("Skipping lock surface creation for headless output");
+        return;
+    }
+
     LOG_DEBUG("Screen::create_lock_surface: {}", m_output_state.m_name);
     m_lock_surface = std::make_unique<LockSurface>(m_config, m_output_state.m_name, m_display, m_registry, m_output_state.m_output);
     update_dimensions_for_surfaces();
@@ -202,6 +207,11 @@ auto wall::Screen::create_wallpaper_surface() -> void { create_wallpaper_surface
 auto wall::Screen::create_wallpaper_surface(std::shared_ptr<MpvResource> mpv_resource) -> void {
     if (m_wallpaper_surface != nullptr) {
         LOG_DEBUG("Wallpaper surface already exists");
+        return;
+    }
+
+    if (m_output_state.m_name.starts_with("HEADLESS-")) {
+        LOG_DEBUG("Skipping wallpaper surface creation for headless output");
         return;
     }
 
