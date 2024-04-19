@@ -132,11 +132,14 @@ auto wall::MpvResource::load_new_config(const wall::MpvResourceConfig& new_confi
 auto wall::MpvResource::next() -> void { m_file_loader->load_next_file(); }
 
 auto wall::MpvResource::setup() -> void {
+    mpv_set_option_string(m_mpv, "vo", "libmpv");
+
     // force VO
     const auto is_force_software_rendering = wall_conf_get(get_config(), general, force_software_rendering);
     if (is_force_software_rendering) {
-        mpv_set_option_string(m_mpv, "vo", "libmpv");
+        mpv_set_option_string(m_mpv, "hwdec", "no");
     } else {
+        mpv_set_option_string(m_mpv, "vo", "libmpv");
         mpv_set_option_string(m_mpv, "hwdec", "auto");
         mpv_set_option_string(m_mpv, "hwdec-codecs", "all");
         mpv_set_option_string(m_mpv, "hwdec-image-format", "auto");
