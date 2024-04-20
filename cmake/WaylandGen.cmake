@@ -28,7 +28,6 @@ set(WAYLAND_PROTOCOLS_FILES
     ${WAYLAND_PROTOCOLS_DIR}/staging/ext-session-lock/ext-session-lock-v1.xml
     ${WAYLAND_PROTOCOLS_DIR}/stable/xdg-shell/xdg-shell.xml
     ${PROJECT_SOURCE_DIR}/wayland-protocols/wlr-layer-shell-unstable-v1.xml
-    ${PROJECT_SOURCE_DIR}/wayland-protocols/wlr-output-management-unstable-v1.xml
 )
 
 set(PROTOCOL_HEADERS "")
