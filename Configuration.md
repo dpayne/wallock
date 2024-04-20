@@ -49,7 +49,6 @@ The default color scheme location will be `~/.config/wallock/color_scheme`. The 
 | border_width | 2 | Default border width. |
 | monitor_primary |  | Set primary monitor |
 | grace_period_secs | 2 | Grace period in seconds for disabling password authentication. |
-| input_inhibitor_enforce | false | Fail if input inhibitor is not found. |
 | general_daemonize | true | Daemonize, run in background. |
 | general_force_software_rendering | false | Forces software rendering. |
 | general_mpv_log_enabled | false | Enables mpv logging. |

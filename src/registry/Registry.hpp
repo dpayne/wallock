@@ -15,7 +15,6 @@
 #include "registry/Subcompositor.hpp"
 #include "registry/XdgBase.hpp"
 #include "util/Loop.hpp"
-#include "wlr-input-inhibitor-unstable-v1-protocol.h"
 
 namespace wall {
 class Display;
@@ -54,7 +53,7 @@ class Registry {
 
     [[nodiscard]] auto get_layer_shell() const -> LayerShell* { return m_layer_shell.get(); }
 
-    [[nodiscard]] auto get_input_inhibit_manager() const -> struct zwlr_input_inhibit_manager_v1* { return m_input_inhibit_manager; }
+    [[nodiscard]] auto get_display() const -> Display* { return m_display; }
 
     auto destory_screens() -> void;
 
@@ -73,8 +72,6 @@ class Registry {
     static const wl_registry_listener k_listener;
 
     const Config& m_config;
-
-    struct zwlr_input_inhibit_manager_v1* m_input_inhibit_manager{};
 
     Display* m_display{};
 

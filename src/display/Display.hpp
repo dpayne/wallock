@@ -11,7 +11,6 @@
 #include "render/RendererCreator.hpp"
 #include "util/Loop.hpp"
 #include "util/OnKeyProcessor.hpp"
-#include "wlr-input-inhibitor-unstable-v1-protocol.h"
 
 namespace wall {
 class Seat;
@@ -121,8 +120,6 @@ class Display {
 
     bool m_is_wallpaper_enabled{};
 
-    bool m_is_enforce_input_inhibitor{};
-
     bool m_is_pause_after_unlock{};
 
     bool m_is_dismiss_after_pause{};
@@ -150,8 +147,6 @@ class Display {
     std::chrono::milliseconds m_grace_period;
 
     std::chrono::time_point<std::chrono::system_clock> m_lock_time{};
-
-    struct zwlr_input_inhibitor_v1* m_input_inhibitor{};
 
     std::vector<std::unique_ptr<Screen>> m_screens_to_be_destroyed;
 

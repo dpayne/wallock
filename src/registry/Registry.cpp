@@ -79,9 +79,6 @@ auto wall::Registry::on_global(uint32_t name, const char* interface, uint32_t ve
         LOG_DEBUG("Lock manager available");
         m_lock_manager->set_lock_manager(
             static_cast<ext_session_lock_manager_v1*>(wl_registry_bind(m_registry, name, &ext_session_lock_manager_v1_interface, version)));
-    } else if (strcmp(interface, zwlr_input_inhibit_manager_v1_interface.name) == 0) {
-        m_input_inhibit_manager =
-            static_cast<zwlr_input_inhibit_manager_v1*>(wl_registry_bind(m_registry, name, &zwlr_input_inhibit_manager_v1_interface, version));
     } else if (strcmp(interface, xdg_wm_base_interface.name) == 0) {
         m_xdg_wm_base->set_wm_base(static_cast<xdg_wm_base*>(wl_registry_bind(m_registry, name, &xdg_wm_base_interface, version)));
     } else if (strcmp(interface, zwlr_layer_shell_v1_interface.name) == 0) {

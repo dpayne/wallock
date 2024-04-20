@@ -6,7 +6,6 @@
 #include "conf/Config.hpp"
 #include "mpv/MpvResource.hpp"
 #include "registry/Lock.hpp"
-#include "wlr-layer-shell-unstable-v1-protocol.h"
 
 namespace wall {
 

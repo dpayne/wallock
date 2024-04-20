@@ -34,7 +34,7 @@ auto wall::Log::setup_default_logger([[maybe_unused]] const Config& config) -> v
     g_default_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(std::string{log_file}, log_file_size, 1);
     g_default_logger = std::make_shared<spdlog::async_logger>(std::string{k_service_name}, g_default_sink, g_default_thread_pool,
                                                               spdlog::async_overflow_policy::overrun_oldest);
-    g_default_logger->flush_on(spdlog::level::err);
+    g_default_logger->flush_on(spdlog::level::debug);
 
     auto default_log_level = get_log_level(log_level);
 

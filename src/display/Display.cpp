@@ -88,12 +88,6 @@ auto wall::Display::create_lock() -> void {
         LOG_FATAL("Failed to get lock");
     }
 
-    if (m_registry->get_input_inhibit_manager() != nullptr) {
-        m_input_inhibitor = zwlr_input_inhibit_manager_v1_get_inhibitor(m_registry->get_input_inhibit_manager());
-    } else if (m_is_enforce_input_inhibitor) {
-        LOG_FATAL("Enforce input inhibitor is enabled but failed to get input inhibit manager.");
-    }
-
     // setup keyboard input handler
     setup_keyboard_callback();
     m_lock_time = std::chrono::system_clock::now();
@@ -329,7 +323,6 @@ auto wall::Display::get_wl_display() const -> wl_display* { return m_wl_display;
 
 auto wall::Display::update_settings() -> void {
     m_is_wallpaper_enabled = wall_conf_get(get_config(), wallpaper, enabled);
-    m_is_enforce_input_inhibitor = wall_conf_get(get_config(), input_inhibitor, enforce);
     m_is_pause_after_unlock = wall_conf_get(get_config(), wallpaper, pause_after_unlock);
     m_is_dismiss_after_pause = wall_conf_get(get_config(), wallpaper, dismiss_after_pause);
     m_pause_after_unlock_delay = std::chrono::seconds(wall_conf_get(get_config(), wallpaper, pause_after_unlock_delay_secs));
@@ -582,11 +575,6 @@ auto wall::Display::unlock() -> void {
     m_keyboard_callback_id = 0;
 
     m_is_swap_lock_to_wallpaper = true;
-
-    if (m_input_inhibitor != nullptr) {
-        zwlr_input_inhibitor_v1_destroy(m_input_inhibitor);
-        m_input_inhibitor = nullptr;
-    }
 
     if (m_lock != nullptr) {
         if (m_lock->is_locked()) {
