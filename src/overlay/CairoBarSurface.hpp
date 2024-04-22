@@ -20,7 +20,7 @@ class CairoBarSurface : public CairoSurface {
     auto update_settings() -> void;
 
    protected:
-    auto draw_frame(int32_t width, int32_t height, int32_t scale) -> std::chrono::milliseconds override;
+    auto draw_frame(int32_t width, int32_t height) -> std::chrono::milliseconds override;
 
     [[nodiscard]] virtual auto generate_message() -> std::string;
 
@@ -30,13 +30,11 @@ class CairoBarSurface : public CairoSurface {
     struct StateCheck {
         int32_t m_width{};
         int32_t m_height{};
-        int32_t m_scale{};
         State m_state{};
         std::string m_message{};
 
         auto operator==(const StateCheck& other) const -> bool {
-            return m_width == other.m_width && m_height == other.m_height && m_scale == other.m_scale && m_message == other.m_message &&
-                   m_state == other.m_state;
+            return m_width == other.m_width && m_height == other.m_height && m_message == other.m_message && m_state == other.m_state;
         }
     };
 

@@ -123,7 +123,8 @@ auto wall::RendererCreator::create_egl_renderer(Surface* surface) const -> void 
 }
 
 auto wall::RendererCreator::create_mpv_renderer(Surface* surface) const -> void {
-    LOG_DEBUG("Creating mpv renderer for surface {}", surface->get_output_name());
+    LOG_DEBUG("Creating mpv renderer for surface {} with size {}x{} and scale {}", surface->get_output_name(), surface->get_width(),
+              surface->get_height(), surface->get_scale_factor());
 
     // make surface current before loading mpv resource
     auto surface_egl = create_egl_surface(surface->get_wl_surface(), surface->get_width(), surface->get_height());

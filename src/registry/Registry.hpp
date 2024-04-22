@@ -6,6 +6,7 @@
 #include <vector>
 #include "conf/Config.hpp"
 #include "display/Screen.hpp"
+#include "fractional-scale-v1-protocol.h"
 #include "input/Seat.hpp"
 #include "registry/BufferPool.hpp"
 #include "registry/Compositor.hpp"
@@ -15,6 +16,7 @@
 #include "registry/Subcompositor.hpp"
 #include "registry/XdgBase.hpp"
 #include "util/Loop.hpp"
+#include "viewporter-protocol.h"
 
 namespace wall {
 class Display;
@@ -55,6 +57,10 @@ class Registry {
 
     [[nodiscard]] auto get_display() const -> Display* { return m_display; }
 
+    [[nodiscard]] auto get_fractional_scale_manager() const -> wp_fractional_scale_manager_v1* { return m_fractional_scale_manager; }
+
+    [[nodiscard]] auto get_viewporter() const -> wp_viewporter* { return m_viewporter; }
+
     auto destory_screens() -> void;
 
     auto move_screens() -> std::vector<std::unique_ptr<wall::Screen>>;
@@ -78,6 +84,10 @@ class Registry {
     Loop* m_loop{};
 
     wl_registry* m_registry{};
+
+    wp_fractional_scale_manager_v1* m_fractional_scale_manager{};
+
+    wp_viewporter* m_viewporter{};
 
     std::unique_ptr<Compositor> m_compositor{};
 

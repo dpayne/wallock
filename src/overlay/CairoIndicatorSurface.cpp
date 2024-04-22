@@ -87,13 +87,13 @@ auto wall::CairoIndicatorSurface::should_draw() -> bool {
     return true;
 }
 
-auto wall::CairoIndicatorSurface::draw_frame(int32_t width, int32_t height, int32_t scale) -> std::chrono::milliseconds {
+auto wall::CairoIndicatorSurface::draw_frame(int32_t width, int32_t height) -> std::chrono::milliseconds {
     if (!should_draw()) {
         return std::chrono::milliseconds::zero();
     }
 
     update_message();
-    StateCheck current_state{width, height, scale, m_indicator.get_highlight_start(), get_state(), m_indicator_message.get_message()};
+    StateCheck current_state{width, height, m_indicator.get_highlight_start(), get_state(), m_indicator_message.get_message()};
     if (m_last_state == current_state) {
         return std::chrono::milliseconds::zero();
     }
@@ -102,7 +102,7 @@ auto wall::CairoIndicatorSurface::draw_frame(int32_t width, int32_t height, int3
     const auto thickness = m_indicator.get_thickness();
     const auto buffer_diameter = (radius + thickness) * 2;
 
-    const auto [buffer_width, buffer_height] = get_buffer_size(buffer_diameter, scale);
+    const auto [buffer_width, buffer_height] = get_buffer_size(buffer_diameter);
     if (buffer_width == 0 || buffer_height == 0 || buffer_width > width || buffer_height > height) {
         LOG_FATAL("Invalid buffer size for indicator");
     }
@@ -136,17 +136,11 @@ auto wall::CairoIndicatorSurface::draw_frame(int32_t width, int32_t height, int3
     return min_redraw_time;
 }
 
-auto wall::CairoIndicatorSurface::get_buffer_size(int32_t buffer_diameter, int32_t scale) -> std::pair<int32_t, int32_t> {
+auto wall::CairoIndicatorSurface::get_buffer_size(int32_t buffer_diameter) -> std::pair<int32_t, int32_t> {
     auto buffer_width = buffer_diameter;
     auto buffer_height = buffer_diameter;
 
     resize_based_on_text(&buffer_width);
-
-    // Ensure buffer size is multiple of buffer scale - required by protocol
-    if (scale > 1) {
-        buffer_width += scale - (buffer_width % scale);
-        buffer_height += scale - (buffer_height % scale);
-    }
 
     return {buffer_width, buffer_height};
 }

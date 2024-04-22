@@ -3,6 +3,7 @@
 #include <wayland-client-protocol.h>
 #include "display/Display.hpp"
 #include "display/Screen.hpp"
+#include "fractional-scale-v1-protocol.h"
 #include "registry/BufferPool.hpp"
 #include "util/Log.hpp"
 #include "wlr-layer-shell-unstable-v1-protocol.h"
@@ -50,6 +51,16 @@ wall::Registry::~Registry() {
     m_compositor = nullptr;
     m_seat = nullptr;
 
+    if (m_viewporter != nullptr) {
+        wp_viewporter_destroy(m_viewporter);
+        m_viewporter = nullptr;
+    }
+
+    if (m_fractional_scale_manager != nullptr) {
+        wp_fractional_scale_manager_v1_destroy(m_fractional_scale_manager);
+        m_fractional_scale_manager = nullptr;
+    }
+
     if (m_registry != nullptr) {
         wl_registry_destroy(m_registry);
         m_registry = nullptr;
@@ -84,6 +95,12 @@ auto wall::Registry::on_global(uint32_t name, const char* interface, uint32_t ve
     } else if (strcmp(interface, zwlr_layer_shell_v1_interface.name) == 0) {
         m_layer_shell->set_wlr_layer_shell(
             static_cast<zwlr_layer_shell_v1*>(wl_registry_bind(m_registry, name, &zwlr_layer_shell_v1_interface, version)));
+    } else if (strcmp(interface, wp_fractional_scale_manager_v1_interface.name) == 0) {
+        m_fractional_scale_manager =
+            static_cast<wp_fractional_scale_manager_v1*>(wl_registry_bind(m_registry, name, &wp_fractional_scale_manager_v1_interface, version));
+    } else if (strcmp(interface, wp_viewporter_interface.name) == 0) {
+        LOG_DEBUG("Viewporter available");
+        m_viewporter = static_cast<wp_viewporter*>(wl_registry_bind(m_registry, name, &wp_viewporter_interface, version));
     } else {
         LOG_DEBUG("Unknown global: {} {} {}", name, interface, version);
     }

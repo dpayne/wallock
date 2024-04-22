@@ -41,16 +41,14 @@ wall::LockSurface::LockSurface(const Config& config, std::string output_name, Di
 
 wall::LockSurface::~LockSurface() { wall::LockSurface::destroy_resources(); }
 
-auto wall::LockSurface::on_configure(uint32_t /* serial */, uint32_t width, uint32_t height) -> void {
+auto wall::LockSurface::on_configure(uint32_t serial, uint32_t width, uint32_t height) -> void {
     LOG_DEBUG("Lock surface on_configure: {} {}", width, height);
-    set_width(width);
-    set_height(height);
+    Surface::on_configure(serial, width, height);
 
     if (is_configured()) {
         // this is a resize request, resize egl surface
         if (get_renderer_mut() != nullptr) {
-            wl_egl_window_resize(get_renderer_mut()->get_surface_egl_mut()->get_egl_window(), width * get_scale_factor(), height * get_scale_factor(),
-                                 0, 0);
+            wl_egl_window_resize(get_renderer_mut()->get_surface_egl_mut()->get_egl_window(), get_width(), get_height(), 0, 0);
         }
         return;
     }

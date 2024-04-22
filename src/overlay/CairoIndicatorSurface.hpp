@@ -22,9 +22,9 @@ class CairoIndicatorSurface : public CairoSurface {
     auto on_state_change(State state) -> void override;
 
    protected:
-    auto draw_frame(int32_t width, int32_t height, int32_t scale) -> std::chrono::milliseconds override;
+    auto draw_frame(int32_t width, int32_t height) -> std::chrono::milliseconds override;
 
-    virtual auto get_buffer_size(int32_t buffer_diameter, int32_t scale) -> std::pair<int32_t, int32_t>;
+    virtual auto get_buffer_size(int32_t buffer_diameter) -> std::pair<int32_t, int32_t>;
 
     auto resize_based_on_text(int32_t* width) -> void;
 
@@ -40,13 +40,12 @@ class CairoIndicatorSurface : public CairoSurface {
     struct StateCheck {
         int32_t m_width{};
         int32_t m_height{};
-        int32_t m_scale{};
         double m_ring_highlight_start{};
         State m_indicator_state{};
         std::string m_message{};
 
         auto operator==(const StateCheck& other) const -> bool {
-            return m_width == other.m_width && m_height == other.m_height && m_scale == other.m_scale && m_message == other.m_message &&
+            return m_width == other.m_width && m_height == other.m_height && m_message == other.m_message &&
                    m_indicator_state == other.m_indicator_state && m_ring_highlight_start == other.m_ring_highlight_start;
         }
     };

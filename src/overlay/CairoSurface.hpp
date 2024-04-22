@@ -24,7 +24,7 @@ class CairoSurface {
     CairoSurface(CairoSurface&&) = delete;
     auto operator=(CairoSurface&&) -> CairoSurface& = delete;
 
-    auto draw(int32_t width, int32_t height, int32_t scale) -> void;
+    auto draw(int32_t width, int32_t height) -> void;
 
     virtual auto on_state_change(State state) -> void;
 
@@ -33,7 +33,7 @@ class CairoSurface {
    protected:
     static auto wl_subpixel_to_cairo_subpixel(wl_output_subpixel subpixel) -> cairo_subpixel_order_t;
 
-    virtual auto draw_frame(int32_t width, int32_t height, int32_t scale) -> std::chrono::milliseconds = 0;
+    virtual auto draw_frame(int32_t width, int32_t height) -> std::chrono::milliseconds = 0;
 
     auto setup_redraw_timer(std::chrono::milliseconds min_redraw_time) -> void;
 
@@ -89,7 +89,9 @@ class CairoSurface {
 
     std::unique_ptr<CairoState> m_cairo_state{};
 
-    int32_t m_scale{1};
+    int32_t m_last_width{};
+
+    int32_t m_last_height{};
 
     std::chrono::milliseconds m_idle_timeout{};
 

@@ -136,7 +136,7 @@ auto wall::CairoSurface::update_surface(wl_surface* child_surface,
 
     wl_subsurface_set_position(subsurface, subsurf_xpos, subsurf_ypos);
 
-    wl_surface_set_buffer_scale(child_surface, 1);
+    wl_surface_set_buffer_scale(child_surface, 1);  // this is always 1 since we use fractional scaling + viewport
     wl_surface_attach(child_surface, buffer->m_buffer, 0, 0);
     wl_surface_damage_buffer(child_surface, 0, 0, INT32_MAX, INT32_MAX);
     wl_surface_commit(child_surface);
@@ -187,15 +187,16 @@ auto wall::CairoSurface::create_cairo_surface(int32_t width, int32_t height, int
     }
 }
 
-auto wall::CairoSurface::draw(int32_t width, int32_t height, int32_t scale) -> void {
-    m_scale = scale;
+auto wall::CairoSurface::draw(int32_t width, int32_t height) -> void {
+    m_last_width = width;
+    m_last_height = height;
     // this happens when we've switched to the main desktop
     if (get_state() == State::Valid) {
         return;
     }
 
-    if (width == 0 || height == 0 || scale == 0) {
-        LOG_ERROR("Invalid dimensions for cairo surface {} {} {}", width, height, scale);
+    if (width == 0 || height == 0) {
+        LOG_ERROR("Invalid dimensions for cairo surface {} {}", width, height);
         return;
     }
 
@@ -205,7 +206,7 @@ auto wall::CairoSurface::draw(int32_t width, int32_t height, int32_t scale) -> v
 
     m_now = std::chrono::system_clock::now();
 
-    const auto min_redraw_time = draw_frame(width, height, scale);
+    const auto min_redraw_time = draw_frame(width, height);
     setup_redraw_timer(min_redraw_time);
 }
 
@@ -217,9 +218,8 @@ auto wall::CairoSurface::setup_redraw_timer(std::chrono::milliseconds min_redraw
                 m_redraw_timer->set_interval(min_redraw_time);
             }
         } else {
-            m_redraw_timer = m_surface->get_display()->get_loop()->add_timer(min_redraw_time, min_redraw_time, [this](loop::Timer* /* timer */) {
-                draw(m_surface->get_width(), m_surface->get_height(), m_scale);
-            });
+            m_redraw_timer = m_surface->get_display()->get_loop()->add_timer(min_redraw_time, min_redraw_time,
+                                                                             [this](loop::Timer* /* timer */) { draw(m_last_width, m_last_height); });
         }
     }
 }

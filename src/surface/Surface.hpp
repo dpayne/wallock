@@ -6,9 +6,11 @@
 #include <filesystem>
 #include <memory>
 #include "State.hpp"
+#include "fractional-scale-v1-protocol.h"
 #include "mpv/MpvResource.hpp"
 #include "mpv/MpvResourceConfig.hpp"
 #include "render/Renderer.hpp"
+#include "viewporter-protocol.h"
 
 namespace wall {
 class CairoBarSurface;
@@ -29,7 +31,7 @@ class Surface {
     auto operator=(Surface&&) -> Surface& = delete;
 
     auto update_settings() -> void;
-    virtual auto on_configure([[maybe_unused]] uint32_t serial, [[maybe_unused]] uint32_t width, [[maybe_unused]] uint32_t height) -> void {}
+    virtual auto on_configure(uint32_t serial, uint32_t width, uint32_t height) -> void;
 
     auto next() -> void;
 
@@ -52,6 +54,8 @@ class Surface {
     [[nodiscard]] auto get_scale_factor() const -> int32_t;
 
     [[nodiscard]] auto get_renderer() const -> const Renderer&;
+
+    [[nodiscard]] auto get_scaled_size(uint32_t size) const -> uint32_t;
 
     [[nodiscard]] auto get_renderer_mut() -> Renderer*;
 
@@ -107,6 +111,8 @@ class Surface {
 
     auto set_next_resource_override(std::filesystem::path next_resource_override) -> void;
 
+    [[nodiscard]] auto get_fractional_scale() const -> uint32_t;
+
    protected:
     [[nodiscard]] auto get_config() const -> const Config&;
 
@@ -118,7 +124,11 @@ class Surface {
 
     auto set_is_configured(bool is_configured) -> void;
 
+    auto set_fractional_scale(uint32_t fractional_scale) -> void;
+
    private:
+    static const wp_fractional_scale_v1_listener k_fractional_scale_listener;
+
     const Config& m_config;
 
     bool m_is_configured{false};
@@ -139,11 +149,21 @@ class Surface {
 
     uint32_t m_height{};
 
+    uint32_t m_non_scaled_width{};
+
+    uint32_t m_non_scaled_height{};
+
     int32_t m_scale_factor{};
+
+    uint32_t m_fractional_scale{120};
 
     wl_output* m_output{};
 
     wl_surface* m_surface{};
+
+    wp_viewport* m_wp_viewport{};
+
+    wp_fractional_scale_v1* m_fractional_scale_obj{};
 
     wl_subsurface* m_indicator_subsurface{};
 

@@ -27,12 +27,13 @@ class CairoBarElement {
 
     auto draw(cairo_t* cairo, double width, double height, const CairoFontCache& font_cache, const std::string& message) const -> void;
 
-    [[nodiscard]] auto get_position_size(int32_t width, int32_t height, int32_t buffer_width, int32_t buffer_height) const
-        -> std::pair<int32_t, int32_t>;
+    [[nodiscard]] auto get_position_size(int32_t width,
+                                         int32_t height,
+                                         int32_t buffer_width,
+                                         int32_t buffer_height) const -> std::pair<int32_t, int32_t>;
 
     [[nodiscard]] auto get_buffer_size(int32_t width,
                                        int32_t height,
-                                       int32_t scale,
                                        const CairoFontCache& font_cache,
                                        const std::string& message) const -> std::pair<int32_t, int32_t>;
 

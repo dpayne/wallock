@@ -61,7 +61,6 @@ auto wall::CairoBarElement::update_settings() -> void {
 
 auto wall::CairoBarElement::get_buffer_size(int32_t width,
                                             int32_t height,
-                                            int32_t scale,
                                             const CairoFontCache& font_cache,
                                             const std::string& message) const -> std::pair<int32_t, int32_t> {
     auto* font_face = font_cache.get_font_face();
@@ -87,17 +86,13 @@ auto wall::CairoBarElement::get_buffer_size(int32_t width,
         buffer_width += 2 * corner_radius;
     }
 
-    if (scale > 1) {
-        // Ensure buffer size is multiple of buffer scale - required by protocol
-        buffer_width += scale - (buffer_width % scale);
-        buffer_height += scale - (buffer_height % scale);
-    }
-
     return {buffer_width, buffer_height};
 }
 
-auto wall::CairoBarElement::get_position_size(int32_t width, int32_t height, int32_t buffer_width, int32_t buffer_height) const
-    -> std::pair<int32_t, int32_t> {
+auto wall::CairoBarElement::get_position_size(int32_t width,
+                                              int32_t height,
+                                              int32_t buffer_width,
+                                              int32_t buffer_height) const -> std::pair<int32_t, int32_t> {
     auto subsurf_xpos = 0;
     auto subsurf_ypos = 0;
 

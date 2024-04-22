@@ -20,7 +20,7 @@ TEST(CairoBarTest, test_bar_alignment) {
     std::string message = "hello world!";
 
     wall::CairoBarElement bar{config};
-    auto [width, height] = bar.get_buffer_size(1920, 1080, 1.0, font_cache, message);
+    auto [width, height] = bar.get_buffer_size(1920, 1080, font_cache, message);
 
     EXPECT_EQ(width, 102);
     EXPECT_EQ(height, 18);
@@ -37,7 +37,7 @@ TEST(CairoBarTest, test_bar_alignment) {
     config.set(wall::conf::k_lock_bar_bottom_padding, 10);
     bar.update_settings();
 
-    auto [width1, height1] = bar.get_buffer_size(1920, 1080, 1.0, font_cache, message);
+    auto [width1, height1] = bar.get_buffer_size(1920, 1080, font_cache, message);
 
     EXPECT_EQ(width1, 102);
     EXPECT_EQ(height1, 18);
@@ -54,7 +54,7 @@ TEST(CairoBarTest, test_bar_alignment) {
     config.set(wall::conf::k_lock_bar_bottom_padding, 10);
     bar.update_settings();
 
-    auto [width2, height2] = bar.get_buffer_size(1920, 1080, 1.0, font_cache, message);
+    auto [width2, height2] = bar.get_buffer_size(1920, 1080, font_cache, message);
 
     EXPECT_EQ(width2, 102);
     EXPECT_EQ(height2, 18);
@@ -71,7 +71,7 @@ TEST(CairoBarTest, test_bar_alignment) {
     config.set(wall::conf::k_lock_bar_bottom_padding, 30);
     bar.update_settings();
 
-    auto [width3, height3] = bar.get_buffer_size(1920, 1080, 1.0, font_cache, message);
+    auto [width3, height3] = bar.get_buffer_size(1920, 1080, font_cache, message);
 
     EXPECT_EQ(width3, 102);
     EXPECT_EQ(height3, 18);
@@ -88,7 +88,7 @@ TEST(CairoBarTest, test_bar_alignment) {
     config.set(wall::conf::k_lock_bar_bottom_padding, 15);
     bar.update_settings();
 
-    auto [width4, height4] = bar.get_buffer_size(1920, 1080, 1.0, font_cache, message);
+    auto [width4, height4] = bar.get_buffer_size(1920, 1080, font_cache, message);
 
     EXPECT_EQ(width4, 102);
     EXPECT_EQ(height4, 18);
@@ -106,7 +106,7 @@ TEST(CairoBarTest, test_bar_alignment) {
 
     bar.update_settings();
 
-    auto [width5, height5] = bar.get_buffer_size(1920, 1080, 1.0, font_cache, message);
+    auto [width5, height5] = bar.get_buffer_size(1920, 1080, font_cache, message);
 
     EXPECT_EQ(width5, 102);
     EXPECT_EQ(height5, 18);
@@ -127,7 +127,7 @@ TEST(CairoBarTest, test_bar_draw) {
     std::string message = "hello world!";
 
     wall::CairoBarElement bar{config};
-    auto [width, height] = bar.get_buffer_size(1920, 1080, 1.0, font_cache, message);
+    auto [width, height] = bar.get_buffer_size(1920, 1080, font_cache, message);
 
     auto* buffer = (unsigned char*)malloc(4 * width * height);
     auto* surface = cairo_image_surface_create_for_data(buffer, CAIRO_FORMAT_ARGB32, width, height, 4 * width);

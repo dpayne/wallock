@@ -92,18 +92,18 @@ auto wall::CairoBarSurface::should_draw() -> bool {
     return should_draw_frame_on_idle(get_surface()->get_wl_bar_surface(), get_surface()->get_wl_bar_subsurface());
 }
 
-auto wall::CairoBarSurface::draw_frame(int32_t width, int32_t height, int32_t scale) -> std::chrono::milliseconds {
+auto wall::CairoBarSurface::draw_frame(int32_t width, int32_t height) -> std::chrono::milliseconds {
     if (!should_draw()) {
         return std::chrono::milliseconds::zero();
     }
 
     const auto message = generate_message();
-    StateCheck current_state{width, height, scale, get_state(), message};
+    StateCheck current_state{width, height, get_state(), message};
     if (m_last_state == current_state) {
         return std::chrono::milliseconds::zero();
     }
 
-    const auto [buffer_width, buffer_height] = m_bar.get_buffer_size(width, height, scale, get_font_cache(), message);
+    const auto [buffer_width, buffer_height] = m_bar.get_buffer_size(width, height, get_font_cache(), message);
     const auto [subsurf_xpos, subsurf_ypos] = m_bar.get_position_size(width, height, buffer_width, buffer_height);
 
     create_cairo_surface(buffer_width, buffer_height, get_pixel_width());

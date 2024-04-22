@@ -10,8 +10,7 @@ class CairoSurfaceMock : public wall::CairoSurface {
    public:
     CairoSurfaceMock(const wall::Config& config, wall::Surface* surface) : wall::CairoSurface(config, surface, WL_OUTPUT_SUBPIXEL_HORIZONTAL_RGB) {}
 
-    auto draw_frame([[maybe_unused]] int32_t width, [[maybe_unused]] int32_t height, [[maybe_unused]] int32_t scale)
-        -> std::chrono::milliseconds override {
+    auto draw_frame([[maybe_unused]] int32_t width, [[maybe_unused]] int32_t height) -> std::chrono::milliseconds override {
         set_last_draw_time(get_now());
         m_draw_count++;
         return std::chrono::milliseconds{100};
@@ -66,7 +65,7 @@ TEST(CairoSurfaceTest, idle_timeout) {
     surface.set_is_visible_on_idle(false);
 
     surface.set_state(wall::State::Input);
-    surface.draw(1920, 1080, 1);
+    surface.draw(1920, 1080);
 
     surface.on_state_change(wall::State::Keypress);
     surface.set_now(surface.get_now() + std::chrono::milliseconds{500});
@@ -94,7 +93,7 @@ TEST(CairoSurfaceTest, invalid_size) {
     RegistryMock registry_mock{config, &loop};
     SurfaceMock surface_mock{config, nullptr, &registry_mock};
     CairoSurfaceMock surface{config, &surface_mock};
-    surface.draw(0, 0, 1);
+    surface.draw(0, 0);
     ASSERT_EQ(surface.get_draw_count(), 0);
 }
 

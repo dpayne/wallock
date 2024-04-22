@@ -88,21 +88,21 @@ TEST(CairoBarSurfaceTest, test_should_draw) {
     bar_surface.on_state_change(wall::State::Input);
     bar_surface.set_now(wall::TestUtils::convert_date_string_to_time_point("2021-01-01 00:00:00"));
 
-    bar_surface.draw(1920, 1080, 1);
+    bar_surface.draw(1920, 1080);
     EXPECT_EQ(bar_surface.m_draw_count, 0);
 
     config.set(wall::conf::k_lock_bar_enabled, true);
     config.set(wall::conf::k_wallpaper_bar_enabled, false);
     surface.m_resource_mode = wall::ResourceMode::Wallpaper;
     bar_surface.update_settings();
-    bar_surface.draw(1920, 1080, 1);
+    bar_surface.draw(1920, 1080);
     EXPECT_EQ(bar_surface.m_draw_count, 0);
 
     config.set(wall::conf::k_lock_bar_enabled, false);
     config.set(wall::conf::k_wallpaper_bar_enabled, true);
     surface.m_resource_mode = wall::ResourceMode::Wallpaper;
     bar_surface.update_settings();
-    bar_surface.draw(1920, 1080, 1);
+    bar_surface.draw(1920, 1080);
     EXPECT_EQ(bar_surface.m_draw_count, 1);
     EXPECT_NEAR(bar_surface.m_last_subpos_x, 814, 1);
     EXPECT_NEAR(bar_surface.m_last_subpos_y, 1041, 1);

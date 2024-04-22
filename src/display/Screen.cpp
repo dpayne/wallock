@@ -159,6 +159,7 @@ auto wall::Screen::on_done() -> void {
 
 auto wall::Screen::on_scale(int32_t factor) -> void {
     LOG_DEBUG("Screen::on_scale: factor: {}", factor);
+    m_output_state.m_scale = factor;
 
     update_dimensions_for_surfaces();
 }
