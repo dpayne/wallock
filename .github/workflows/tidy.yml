@@ -45,8 +45,8 @@ jobs:
         with:
           style: ""
           ignore: ".git|.github|build|cmake|benchmark|test|main|include"
-          files-changed-only: true
-          lines-changed-only: true
+          files-changed-only: false
+          lines-changed-only: false
           version: "17"
           tidy-checks: "" # force it to use the .clang-tidy file
           database: "build" # path to the compile_commands.json file
