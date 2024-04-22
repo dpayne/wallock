@@ -26,10 +26,10 @@ pkg_check_modules(
 
 set(WAYLAND_PROTOCOLS_FILES
     ${WAYLAND_PROTOCOLS_DIR}/staging/ext-session-lock/ext-session-lock-v1.xml
-    ${WAYLAND_PROTOCOLS_DIR}/staging/fractional-scale/fractional-scale-v1.xml
     ${WAYLAND_PROTOCOLS_DIR}/stable/xdg-shell/xdg-shell.xml
     ${WAYLAND_PROTOCOLS_DIR}/stable/viewporter/viewporter.xml
     ${PROJECT_SOURCE_DIR}/wayland-protocols/wlr-layer-shell-unstable-v1.xml
+    ${PROJECT_SOURCE_DIR}/wayland-protocols/fractional-scale-v1.xml
 )
 
 set(PROTOCOL_HEADERS "")
