@@ -69,10 +69,6 @@ class Display {
    protected:
     [[nodiscard]] auto get_config() const -> const Config&;
 
-    [[nodiscard]] auto create_pending_surfaces() -> bool;
-
-    auto recreate_failed_renderers(Screen* screen) -> void;
-
     auto close_loop() -> void;
 
     auto unlock() -> void;

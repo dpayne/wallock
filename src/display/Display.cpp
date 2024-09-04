@@ -3,8 +3,6 @@
 #include <wayland-client-core.h>
 #include <xf86drm.h>
 #include <xkbcommon/xkbcommon.h>
-#include <chrono>
-#include <filesystem>
 #include "conf/ConfigMacros.hpp"
 #include "display/PrimaryDisplayState.hpp"
 #include "display/Screen.hpp"
@@ -39,15 +37,7 @@ wall::Display::Display(const Config& config,
     m_renderer_creator = std::make_unique<RendererCreator>(get_config(), this);
     roundtrip();
 
-    if (m_is_locked) {
-        create_lock();
-        for (const auto& screen : m_registry->get_screens()) {
-            screen->create_lock_surface(m_lock.get());
-        }
-    } else {
-        for (const auto& screen : m_registry->get_screens()) {
-            screen->create_wallpaper_surface();
-        }
+    if (!m_is_locked) {
         start_pause_timer();
     }
     roundtrip();
@@ -55,14 +45,12 @@ wall::Display::Display(const Config& config,
     m_display_poll = m_loop->add_poll(wl_display_get_fd(m_wl_display), static_cast<int16_t>(POLLIN), [this](loop::Poll*, uint16_t events) {
         if ((events & POLLIN) != 0) {
             m_is_dispatch_pending = true;
-        }
-
-        else {
-            LOG_ERROR("Invalid poll event on display fd");
+        } else {
             stop();
         }
     });
     m_display_wake = m_loop->add_poll_pipe([](loop::PollPipe*, const std::vector<uint8_t>&) { LOG_DEBUG("Display wake"); });
+
     check_for_failure();
 }
 
@@ -146,39 +134,23 @@ auto wall::Display::loop() -> void {
         while (wl_display_prepare_read(m_wl_display) != 0) {
             wl_display_dispatch_pending(m_wl_display);
         }
-
         wl_display_flush(m_wl_display);
 
-        m_is_dispatch_pending = false;
-        if (!m_loop->run()) {
-            break;
+        if (m_loop->run()) {
+            wl_display_read_events(m_wl_display);
+        } else {
+            wl_display_cancel_read(m_wl_display);
         }
 
-        if (!m_is_dispatch_pending) {
-            wl_display_cancel_read(m_wl_display);
-        } else {
-            if (wl_display_read_events(m_wl_display) == -1) {
-                LOG_ERROR("Failed to read events");
-                stop();
-            }
+        for (const auto& screen : m_registry->get_screens()) {
+            screen->get_wallpaper_surface_mut()->get_renderer_mut()->render(screen->get_wallpaper_surface_mut());
         }
 
         wl_display_dispatch_pending(m_wl_display);
 
-        // With nvidia's egl-wayland implementation, we have to create and destroy the
-        // EGL surface outside the dispatch loop since it will deadlock otherwise.
-        auto is_roundtrip = create_pending_surfaces();
-        if (!m_screens_to_be_destroyed.empty()) {
-            m_screens_to_be_destroyed.clear();
-            is_roundtrip = true;
-        }
-
-        if (is_roundtrip) {
-            roundtrip();
-        }
-
         if (m_is_shutting_down) {
             close_loop();
+            break;
         }
     }
 }
@@ -198,69 +170,6 @@ auto wall::Display::close_loop() -> void {
             m_display_poll->close();
             m_display_poll = nullptr;
         }
-    }
-}
-
-auto wall::Display::create_pending_surfaces() -> bool {
-    auto is_created = false;
-    if (m_is_swap_lock_to_wallpaper) {
-        swap_lock_to_wallpaper();
-        m_is_swap_lock_to_wallpaper = false;
-        is_created = true;
-    }
-
-    if (m_is_swap_wallpaper_to_lock) {
-        swap_wallpaper_to_lock();
-        m_is_swap_wallpaper_to_lock = false;
-        is_created = true;
-    }
-
-    if (m_registry != nullptr) {
-        for (const auto& screen : m_registry->get_screens()) {
-            if (screen->is_done()) {
-                // this happens during startup
-                if (screen->get_lock_surface_mut() == nullptr && screen->get_wallpaper_surface_mut() == nullptr) {
-                    LOG_DEBUG("Creating surfaces for screen: {}", screen->get_output_state().m_name);
-                    if (is_locked()) {
-                        screen->create_lock_surface(m_lock.get());
-                    } else {
-                        screen->create_wallpaper_surface();
-                    }
-
-                    is_created = true;
-                } else {
-                    recreate_failed_renderers(screen.get());
-                }
-            }
-        }
-    }
-
-    return is_created;
-}
-
-auto wall::Display::recreate_failed_renderers(Screen* screen) -> void {
-    if (screen->get_lock_surface_mut() != nullptr && screen->get_lock_surface_mut()->get_renderer_mut() != nullptr &&
-        screen->get_lock_surface_mut()->get_renderer_mut()->is_recreate_egl_surface()) {
-        LOG_DEBUG("Recreating lock surface for screen: {}", screen->get_output_state().m_name);
-        auto* mpv_resource = screen->get_lock_surface_mut()->get_mpv_resource();
-        std::filesystem::path current_file;
-        if (mpv_resource != nullptr) {
-            current_file = mpv_resource->get_current_file();
-        }
-        screen->destroy_lock_surface();
-        screen->create_lock_surface(m_lock.get());
-        screen->get_lock_surface_mut()->set_next_resource_override(current_file);
-    } else if (screen->get_wallpaper_surface_mut() != nullptr && screen->get_wallpaper_surface_mut()->get_renderer_mut() != nullptr &&
-               screen->get_wallpaper_surface_mut()->get_renderer_mut()->is_recreate_egl_surface()) {
-        LOG_DEBUG("Recreating wallpaper surface for screen: {}", screen->get_output_state().m_name);
-        auto* mpv_resource = screen->get_wallpaper_surface_mut()->get_mpv_resource();
-        std::filesystem::path current_file;
-        if (mpv_resource != nullptr) {
-            current_file = mpv_resource->get_current_file();
-        }
-        screen->destroy_wallpaper_surface();
-        screen->create_wallpaper_surface();
-        screen->get_wallpaper_surface_mut()->set_next_resource_override(current_file);
     }
 }
 

@@ -5,6 +5,8 @@
 #include <atomic>
 #include <cstdint>
 
+#include "util/Log.hpp"
+
 namespace {
 std::atomic_uint64_t g_id = 0UL;
 }
