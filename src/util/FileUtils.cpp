@@ -49,8 +49,9 @@ auto wall::FileUtils::get_expansion_cache(const std::filesystem::path& file) -> 
     return get_expansion(file, k_cache_dirs);
 }
 
-auto wall::FileUtils::get_expansion(const std::filesystem::path& file, const std::vector<std::filesystem::path>& root_dirs, bool is_exists)
-    -> std::optional<std::filesystem::path> {
+auto wall::FileUtils::get_expansion(const std::filesystem::path& file,
+                                    const std::vector<std::filesystem::path>& root_dirs,
+                                    bool is_exists) -> std::optional<std::filesystem::path> {
     if (file.is_absolute()) {
         return file;
     }
@@ -117,8 +118,8 @@ auto wall::FileUtils::expand_path(const std::filesystem::path& path) -> std::opt
     return result;
 }
 
-auto wall::FileUtils::get_all_files(const std::filesystem::path& dir, const std::set<std::string>& valid_extensions)
-    -> std::deque<std::filesystem::path> {
+auto wall::FileUtils::get_all_files(const std::filesystem::path& dir,
+                                    const std::set<std::string>& valid_extensions) -> std::deque<std::filesystem::path> {
     std::deque<std::filesystem::path> files;
     const auto expanded_path_opt = FileUtils::expand_path(dir);
     if (!expanded_path_opt) {

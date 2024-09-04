@@ -47,8 +47,9 @@ class Loop {
 
     auto add_unix_socket(const std::filesystem::path& path, std::function<void(loop::UnixSocket*, const std::string&)> callback) -> loop::UnixSocket*;
 
-    auto add_timer(std::chrono::milliseconds initial_delay, std::chrono::milliseconds interval, std::function<void(loop::Timer*)> callback)
-        -> loop::Timer*;
+    auto add_timer(std::chrono::milliseconds initial_delay,
+                   std::chrono::milliseconds interval,
+                   std::function<void(loop::Timer*)> callback) -> loop::Timer*;
 
    protected:
     auto poll_fds(std::chrono::milliseconds min_timeout) -> void;
