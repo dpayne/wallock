@@ -19,7 +19,7 @@ class Surface;
 class MpvResource : public std::enable_shared_from_this<MpvResource> {
    public:
     MpvResource(const Config& config, Display* display, Surface* surface);
-    ~MpvResource();
+    virtual ~MpvResource();
 
     MpvResource(const MpvResource&) = delete;
     auto operator=(const MpvResource&) -> MpvResource& = delete;

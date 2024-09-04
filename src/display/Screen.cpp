@@ -154,7 +154,7 @@ auto wall::Screen::on_done() -> void {
     LOG_DEBUG("Screen::on_done: {}", m_output_state.m_name);
 
     if (m_display->is_locked()) {
-        create_lock_surface(m_display->get_lock_mut());
+        create_lock_surface(m_display->get_lock_safe());
     } else {
         create_wallpaper_surface();
     }
