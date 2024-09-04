@@ -52,6 +52,10 @@ auto wall::MpvResource::play() -> void {
     if (m_is_paused) {
         send_mpv_cmd("set", "pause", "no");
     }
+
+    if (m_is_single_frame) {
+        send_mpv_cmd("seek", "0", "absolute");
+    }
     m_is_paused = false;
 }
 

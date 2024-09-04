@@ -257,11 +257,17 @@ auto wall::Screen::on_state_change(State state) -> void {
 }
 
 auto wall::Screen::destroy_lock_surface() -> void {
+    if (m_lock_surface->get_mpv_resource() != nullptr) {
+        m_lock_surface->get_mpv_resource()->set_surface(nullptr);
+    }
     m_lock_surface->destroy_resources();
     m_lock_surface = nullptr;
 }
 
 auto wall::Screen::destroy_wallpaper_surface() -> void {
+    if (m_wallpaper_surface->get_mpv_resource() != nullptr) {
+        m_wallpaper_surface->get_mpv_resource()->set_surface(nullptr);
+    }
     m_wallpaper_surface->destroy_resources();
     m_wallpaper_surface = nullptr;
 }

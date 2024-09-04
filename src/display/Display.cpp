@@ -472,6 +472,8 @@ auto wall::Display::swap_wallpaper_to_lock() -> void {
         screen->destroy_wallpaper_surface();
     }
 
+    roundtrip();
+
     for (const auto& screen : m_registry->get_screens()) {
         if (is_swap_compatible && last_files_for_screens.contains(screen->get_output_state().m_global_name)) {
             auto resource = std::move(last_files_for_screens[screen->get_output_state().m_global_name]);
@@ -518,6 +520,8 @@ auto wall::Display::swap_lock_to_wallpaper() -> void {
 
         screen->destroy_lock_surface();
     }
+
+    roundtrip();
 
     for (const auto& screen : m_registry->get_screens()) {
         if (is_swap_compatible && last_files_for_screens.contains(screen->get_output_state().m_global_name)) {
