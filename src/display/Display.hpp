@@ -9,6 +9,7 @@
 #include "registry/Lock.hpp"
 #include "registry/Registry.hpp"
 #include "render/RendererCreator.hpp"
+#include "util/LockCmd.hpp"
 #include "util/Loop.hpp"
 #include "util/OnKeyProcessor.hpp"
 
@@ -70,6 +71,10 @@ class Display {
 
    protected:
     [[nodiscard]] auto get_config() const -> const Config&;
+
+    auto run_lock_cmd() -> void;
+
+    auto stop_lock_cmd() -> void;
 
     auto swap_surfaces() -> void;
 
@@ -161,5 +166,7 @@ class Display {
     bool m_is_swap_wallpaper_to_lock{};
 
     bool m_is_swap_lock_to_wallpaper{};
+
+    LockCmd m_lock_cmd;
 };
 }  // namespace wall

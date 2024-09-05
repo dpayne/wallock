@@ -52,6 +52,7 @@ The default color scheme location will be `~/.config/wallock/color_scheme`. The 
 | general_daemonize | true | Daemonize, run in background. |
 | general_force_software_rendering | false | Forces software rendering. |
 | general_mpv_log_enabled | false | Enables mpv logging. |
+| general_lock_cmd |  | Command to run after locking, the process will be terminated after the lock screen is dismissed. |
 
 
 ### Wallpaper and Lock Screen Options
