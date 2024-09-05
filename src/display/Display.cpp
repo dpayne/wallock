@@ -130,6 +130,37 @@ auto wall::Display::check_for_failure() -> void {
     }
 }
 
+auto wall::Display::swap_surfaces() -> void {
+    if (m_is_swap_lock_to_wallpaper) {
+        m_is_swap_lock_to_wallpaper = false;
+        swap_lock_to_wallpaper();
+    } else if (m_is_swap_wallpaper_to_lock) {
+        m_is_swap_wallpaper_to_lock = false;
+        swap_wallpaper_to_lock();
+    }
+}
+
+auto wall::Display::render() -> void {
+    for (const auto& screen : m_registry->get_screens()) {
+        Surface* surface{};
+        if (m_is_locked) {
+            surface = screen->get_lock_surface_mut();
+        } else {
+            surface = screen->get_wallpaper_surface_mut();
+        }
+
+        if (surface != nullptr) {
+            Renderer* renderer = surface->get_renderer_mut();
+            if (renderer != nullptr) {
+                renderer->render(surface);
+                if (renderer->is_recreate_egl_surface()) {
+                    recreate_failed_renderers(screen.get());
+                }
+            }
+        }
+    }
+}
+
 auto wall::Display::loop() -> void {
     while (true) {
         while (wl_display_prepare_read(m_wl_display) != 0) {
@@ -143,32 +174,8 @@ auto wall::Display::loop() -> void {
             wl_display_cancel_read(m_wl_display);
         }
 
-        if (m_is_swap_lock_to_wallpaper) {
-            m_is_swap_lock_to_wallpaper = false;
-            swap_lock_to_wallpaper();
-        } else if (m_is_swap_wallpaper_to_lock) {
-            m_is_swap_wallpaper_to_lock = false;
-            swap_wallpaper_to_lock();
-        }
-
-        for (const auto& screen : m_registry->get_screens()) {
-            Surface* surface{};
-            if (m_is_locked) {
-                surface = screen->get_lock_surface_mut();
-            } else {
-                surface = screen->get_wallpaper_surface_mut();
-            }
-
-            if (surface != nullptr) {
-                Renderer* renderer = surface->get_renderer_mut();
-                if (renderer != nullptr) {
-                    renderer->render(surface);
-                    if (renderer->is_recreate_egl_surface()) {
-                        recreate_failed_renderers(screen.get());
-                    }
-                }
-            }
-        }
+        swap_surfaces();
+        render();
 
         wl_display_dispatch_pending(m_wl_display);
 

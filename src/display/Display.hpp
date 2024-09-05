@@ -71,6 +71,10 @@ class Display {
    protected:
     [[nodiscard]] auto get_config() const -> const Config&;
 
+    auto swap_surfaces() -> void;
+
+    auto render() -> void;
+
     auto recreate_failed_renderers(Screen* screen) -> void;
 
     auto close_loop() -> void;
