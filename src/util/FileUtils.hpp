@@ -22,11 +22,12 @@ class FileUtils {
 
     static auto get_default_runtime_dir() -> std::filesystem::path;
 
-    static auto get_all_files(const std::filesystem::path& dir, const std::set<std::string>& valid_extensions = {})
-        -> std::deque<std::filesystem::path>;
+    static auto get_all_files(const std::filesystem::path& dir,
+                              const std::set<std::string>& valid_extensions = {}) -> std::deque<std::filesystem::path>;
 
    private:
-    static auto get_expansion(const std::filesystem::path& file, const std::vector<std::filesystem::path>& root_dirs, bool is_exists = false)
-        -> std::optional<std::filesystem::path>;
+    static auto get_expansion(const std::filesystem::path& file,
+                              const std::vector<std::filesystem::path>& root_dirs,
+                              bool is_exists = false) -> std::optional<std::filesystem::path>;
 };
 }  // namespace wall

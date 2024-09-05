@@ -46,6 +46,8 @@ class Display {
 
     [[nodiscard]] auto get_lock_mut() -> Lock*;
 
+    [[nodiscard]] auto get_lock_safe() -> Lock*;
+
     [[nodiscard]] auto get_primary_state_mut() -> PrimaryDisplayState*;
 
     [[nodiscard]] auto get_renderer_creator_mut() -> RendererCreator*;
@@ -69,7 +71,9 @@ class Display {
    protected:
     [[nodiscard]] auto get_config() const -> const Config&;
 
-    [[nodiscard]] auto create_pending_surfaces() -> bool;
+    auto swap_surfaces() -> void;
+
+    auto render() -> void;
 
     auto recreate_failed_renderers(Screen* screen) -> void;
 

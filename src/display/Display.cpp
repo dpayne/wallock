@@ -3,8 +3,6 @@
 #include <wayland-client-core.h>
 #include <xf86drm.h>
 #include <xkbcommon/xkbcommon.h>
-#include <chrono>
-#include <filesystem>
 #include "conf/ConfigMacros.hpp"
 #include "display/PrimaryDisplayState.hpp"
 #include "display/Screen.hpp"
@@ -12,6 +10,7 @@
 #include "mpv/MpvResourceConfig.hpp"
 #include "pam/PasswordManager.hpp"
 #include "registry/Registry.hpp"
+#include "render/Renderer.hpp"
 #include "surface/LockSurface.hpp"
 #include "surface/WallpaperSurface.hpp"
 #include "util/Log.hpp"
@@ -39,15 +38,7 @@ wall::Display::Display(const Config& config,
     m_renderer_creator = std::make_unique<RendererCreator>(get_config(), this);
     roundtrip();
 
-    if (m_is_locked) {
-        create_lock();
-        for (const auto& screen : m_registry->get_screens()) {
-            screen->create_lock_surface(m_lock.get());
-        }
-    } else {
-        for (const auto& screen : m_registry->get_screens()) {
-            screen->create_wallpaper_surface();
-        }
+    if (!m_is_locked) {
         start_pause_timer();
     }
     roundtrip();
@@ -55,14 +46,12 @@ wall::Display::Display(const Config& config,
     m_display_poll = m_loop->add_poll(wl_display_get_fd(m_wl_display), static_cast<int16_t>(POLLIN), [this](loop::Poll*, uint16_t events) {
         if ((events & POLLIN) != 0) {
             m_is_dispatch_pending = true;
-        }
-
-        else {
-            LOG_ERROR("Invalid poll event on display fd");
+        } else {
             stop();
         }
     });
     m_display_wake = m_loop->add_poll_pipe([](loop::PollPipe*, const std::vector<uint8_t>&) { LOG_DEBUG("Display wake"); });
+
     check_for_failure();
 }
 
@@ -141,101 +130,60 @@ auto wall::Display::check_for_failure() -> void {
     }
 }
 
-auto wall::Display::loop() -> void {
-    while (true) {
-        while (wl_display_prepare_read(m_wl_display) != 0) {
-            wl_display_dispatch_pending(m_wl_display);
-        }
-
-        wl_display_flush(m_wl_display);
-
-        m_is_dispatch_pending = false;
-        if (!m_loop->run()) {
-            break;
-        }
-
-        if (!m_is_dispatch_pending) {
-            wl_display_cancel_read(m_wl_display);
-        } else {
-            if (wl_display_read_events(m_wl_display) == -1) {
-                LOG_ERROR("Failed to read events");
-                stop();
-            }
-        }
-
-        wl_display_dispatch_pending(m_wl_display);
-
-        // With nvidia's egl-wayland implementation, we have to create and destroy the
-        // EGL surface outside the dispatch loop since it will deadlock otherwise.
-        auto is_roundtrip = create_pending_surfaces();
-        if (!m_screens_to_be_destroyed.empty()) {
-            m_screens_to_be_destroyed.clear();
-            is_roundtrip = true;
-        }
-
-        if (is_roundtrip) {
-            roundtrip();
-        }
-
-        if (m_is_shutting_down) {
-            close_loop();
-        }
-    }
-}
-auto wall::Display::close_loop() -> void {
-    stop_now();
-    if (m_is_shutting_down) {
-        stop_now();
-
-        m_renderer_creator = nullptr;
-
-        if (m_display_wake != nullptr) {
-            m_display_wake->close();
-            m_display_wake = nullptr;
-        }
-
-        if (m_display_poll != nullptr) {
-            m_display_poll->close();
-            m_display_poll = nullptr;
-        }
-    }
-}
-
-auto wall::Display::create_pending_surfaces() -> bool {
-    auto is_created = false;
+auto wall::Display::swap_surfaces() -> void {
     if (m_is_swap_lock_to_wallpaper) {
-        swap_lock_to_wallpaper();
         m_is_swap_lock_to_wallpaper = false;
-        is_created = true;
-    }
-
-    if (m_is_swap_wallpaper_to_lock) {
-        swap_wallpaper_to_lock();
+        swap_lock_to_wallpaper();
+    } else if (m_is_swap_wallpaper_to_lock) {
         m_is_swap_wallpaper_to_lock = false;
-        is_created = true;
+        swap_wallpaper_to_lock();
     }
+}
 
-    if (m_registry != nullptr) {
-        for (const auto& screen : m_registry->get_screens()) {
-            if (screen->is_done()) {
-                // this happens during startup
-                if (screen->get_lock_surface_mut() == nullptr && screen->get_wallpaper_surface_mut() == nullptr) {
-                    LOG_DEBUG("Creating surfaces for screen: {}", screen->get_output_state().m_name);
-                    if (is_locked()) {
-                        screen->create_lock_surface(m_lock.get());
-                    } else {
-                        screen->create_wallpaper_surface();
-                    }
+auto wall::Display::render() -> void {
+    for (const auto& screen : m_registry->get_screens()) {
+        Surface* surface{};
+        if (m_is_locked) {
+            surface = screen->get_lock_surface_mut();
+        } else {
+            surface = screen->get_wallpaper_surface_mut();
+        }
 
-                    is_created = true;
-                } else {
+        if (surface != nullptr) {
+            Renderer* renderer = surface->get_renderer_mut();
+            if (renderer != nullptr) {
+                renderer->render(surface);
+                if (renderer->is_recreate_egl_surface()) {
                     recreate_failed_renderers(screen.get());
                 }
             }
         }
     }
+}
 
-    return is_created;
+auto wall::Display::loop() -> void {
+    while (true) {
+        while (wl_display_prepare_read(m_wl_display) != 0) {
+            wl_display_dispatch_pending(m_wl_display);
+        }
+        wl_display_flush(m_wl_display);
+
+        if (m_loop->run()) {
+            wl_display_read_events(m_wl_display);
+        } else {
+            wl_display_cancel_read(m_wl_display);
+        }
+
+        swap_surfaces();
+        render();
+
+        wl_display_dispatch_pending(m_wl_display);
+
+        if (m_is_shutting_down) {
+            close_loop();
+            break;
+        }
+    }
 }
 
 auto wall::Display::recreate_failed_renderers(Screen* screen) -> void {
@@ -261,6 +209,25 @@ auto wall::Display::recreate_failed_renderers(Screen* screen) -> void {
         screen->destroy_wallpaper_surface();
         screen->create_wallpaper_surface();
         screen->get_wallpaper_surface_mut()->set_next_resource_override(current_file);
+    }
+}
+
+auto wall::Display::close_loop() -> void {
+    stop_now();
+    if (m_is_shutting_down) {
+        stop_now();
+
+        m_renderer_creator = nullptr;
+
+        if (m_display_wake != nullptr) {
+            m_display_wake->close();
+            m_display_wake = nullptr;
+        }
+
+        if (m_display_poll != nullptr) {
+            m_display_poll->close();
+            m_display_poll = nullptr;
+        }
     }
 }
 
@@ -500,7 +467,6 @@ auto wall::Display::setup_keyboard_callback() -> void {  // NOLINT (readability-
 }
 
 auto wall::Display::swap_wallpaper_to_lock() -> void {
-    LOG_DEBUG("Swapping wallpaper to lock");
     std::map<uint32_t, std::shared_ptr<MpvResource>> last_files_for_screens;
 
     const auto is_swap_compatible = MpvResourceConfig::is_resource_modes_compatible(get_config(), ResourceMode::Wallpaper, ResourceMode::Lock);
@@ -534,6 +500,14 @@ auto wall::Display::lock() -> void {
 
     m_is_swap_wallpaper_to_lock = true;
     create_lock();
+}
+
+auto wall::Display::get_lock_safe() -> Lock* {
+    if (m_lock == nullptr) {
+        m_is_locked = true;
+        create_lock();
+    }
+    return m_lock.get();
 }
 
 auto wall::Display::swap_lock_to_wallpaper() -> void {

@@ -248,13 +248,14 @@ auto wall::Loop::add_poll_pipe(std::function<void(loop::PollPipe*, const std::ve
     return add_handle(std::make_unique<loop::PollPipe>(std::move(callback)));
 }
 
-auto wall::Loop::add_timer(std::chrono::milliseconds initial_delay, std::chrono::milliseconds interval, std::function<void(loop::Timer*)> callback)
-    -> loop::Timer* {
+auto wall::Loop::add_timer(std::chrono::milliseconds initial_delay,
+                           std::chrono::milliseconds interval,
+                           std::function<void(loop::Timer*)> callback) -> loop::Timer* {
     return add_handle(std::make_unique<loop::Timer>(m_now + initial_delay, interval, std::move(callback)));
 }
 
-auto wall::Loop::add_unix_socket(const std::filesystem::path& path, std::function<void(loop::UnixSocket*, const std::string&)> callback)
-    -> loop::UnixSocket* {
+auto wall::Loop::add_unix_socket(const std::filesystem::path& path,
+                                 std::function<void(loop::UnixSocket*, const std::string&)> callback) -> loop::UnixSocket* {
     return add_handle(std::make_unique<loop::UnixSocket>(this, path, std::move(callback)));
 }
 

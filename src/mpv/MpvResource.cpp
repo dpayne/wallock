@@ -52,6 +52,10 @@ auto wall::MpvResource::play() -> void {
     if (m_is_paused) {
         send_mpv_cmd("set", "pause", "no");
     }
+
+    if (m_is_single_frame) {
+        send_mpv_cmd("seek", "0", "absolute");
+    }
     m_is_paused = false;
 }
 
@@ -200,7 +204,6 @@ auto wall::MpvResource::setup_update_callback() -> void {
         mpv_render_context_update(get_mpv_context());
         if (m_surface != nullptr && m_surface->get_renderer_mut() != nullptr) {
             m_surface->get_renderer_mut()->set_is_dirty(true);
-            m_surface->get_renderer_mut()->render(get_surface());
         }
     });
 

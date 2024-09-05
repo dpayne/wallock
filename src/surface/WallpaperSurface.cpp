@@ -106,6 +106,7 @@ auto wall::WallpaperSurface::on_configure(uint32_t serial, uint32_t width, uint3
 
     if (get_renderer_mut() == nullptr) {
         get_display()->get_renderer_creator_mut()->create_mpv_renderer(this);
+        /* get_display()->get_renderer_creator_mut()->create_egl_renderer(this); */
     }
 
     set_is_configured(true);

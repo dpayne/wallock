@@ -20,7 +20,6 @@ wall::RendererEGL::RendererEGL(const Config& config,
     : Renderer(config, display, std::move(surface_egl)), m_egl_display{egl_display}, m_egl_context{egl_context} {}
 
 auto wall::RendererEGL::render([[maybe_unused]] Surface* surface) -> void {
-    LOG_DEBUG("Rendering");
     if (eglMakeCurrent(m_egl_display, get_surface_egl().get_egl_surface(), get_surface_egl().get_egl_surface(), m_egl_context) == EGL_FALSE) {
         LOG_FATAL("Couldn't make EGL context current");
         return;
@@ -38,16 +37,15 @@ auto wall::RendererEGL::render([[maybe_unused]] Surface* surface) -> void {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    /*     red += 1.0; */
-    /*     green += 1.0; */
-    /*     blue += 1.0; */
+    red += 1.0;
+    green += 1.0;
+    blue += 1.0;
 
-    /*     red = fmod(red, 255.0); */
-    /*     green = fmod(green, 255.0); */
-    /*     blue = fmod(blue, 255.0); */
+    red = fmod(red, 255.0);
+    green = fmod(green, 255.0);
+    blue = fmod(blue, 255.0);
 
-    /* setup_next_frame_callback(surface); */
-    LOG_DEBUG("Rendering color: {} {} {}", red, green, blue);
+    setup_next_frame_callback(surface);
     eglSwapBuffers(m_egl_display, get_surface_egl().get_egl_surface());
     set_has_buffer(true);
 }

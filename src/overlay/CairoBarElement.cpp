@@ -59,8 +59,10 @@ auto wall::CairoBarElement::update_settings() -> void {
     m_font_color = wall_conf_get_with_fallback(get_config(), lock_bar, font_color, font, color);
 }
 
-auto wall::CairoBarElement::get_buffer_size(int32_t width, int32_t height, const CairoFontCache& font_cache, const std::string& message) const
-    -> std::pair<int32_t, int32_t> {
+auto wall::CairoBarElement::get_buffer_size(int32_t width,
+                                            int32_t height,
+                                            const CairoFontCache& font_cache,
+                                            const std::string& message) const -> std::pair<int32_t, int32_t> {
     auto* font_face = font_cache.get_font_face();
     auto font_size = font_cache.get_font_size();
     auto* cairo = font_cache.get_font_cairo_state()->get_cairo();
@@ -87,8 +89,10 @@ auto wall::CairoBarElement::get_buffer_size(int32_t width, int32_t height, const
     return {buffer_width, buffer_height};
 }
 
-auto wall::CairoBarElement::get_position_size(int32_t width, int32_t height, int32_t buffer_width, int32_t buffer_height) const
-    -> std::pair<int32_t, int32_t> {
+auto wall::CairoBarElement::get_position_size(int32_t width,
+                                              int32_t height,
+                                              int32_t buffer_width,
+                                              int32_t buffer_height) const -> std::pair<int32_t, int32_t> {
     auto subsurf_xpos = 0;
     auto subsurf_ypos = 0;
 
