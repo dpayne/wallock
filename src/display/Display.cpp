@@ -26,7 +26,8 @@ wall::Display::Display(const Config& config,
       m_lock{nullptr},
       m_is_locked(is_start_locked),
       m_on_key_processor{config, std::make_unique<PasswordManager>(loop), [this](State state) { on_state_change(state); }},
-      m_on_stop{std::move(on_stop)} {
+      m_on_stop{std::move(on_stop)},
+      m_lock_cmd(m_config) {
     update_settings();
     m_is_nvidia = detect_nvidia();
 
@@ -80,6 +81,7 @@ auto wall::Display::create_lock() -> void {
     // setup keyboard input handler
     setup_keyboard_callback();
     m_lock_time = std::chrono::system_clock::now();
+    m_lock_cmd.run();
 }
 
 auto wall::Display::detect_nvidia() -> bool {
@@ -558,6 +560,7 @@ auto wall::Display::unlock() -> void {
     }
 
     start_pause_timer();
+    m_lock_cmd.stop();
 
     const auto is_wallpaper_enabled = wall_conf_get(get_config(), wallpaper, enabled);
     if (is_wallpaper_enabled) {
